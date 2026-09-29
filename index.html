@@ -21,6 +21,16 @@
   }
 
   html,body{height:100%;overflow:hidden;}
+
+  /* anti burn-in: nudge the whole board a few px on a slow cycle */
+  @keyframes burnShift{
+    0%   {transform:translate(0px, 0px);}
+    20%  {transform:translate(3px, 2px);}
+    40%  {transform:translate(-2px, 3px);}
+    60%  {transform:translate(2px, -3px);}
+    80%  {transform:translate(-3px, -2px);}
+    100% {transform:translate(0px, 0px);}
+  }
   body{
     margin:0;
     background:
@@ -40,6 +50,7 @@
     padding:clamp(16px,2.4vh,34px) clamp(18px,2.4vw,44px);
     padding-block:clamp(16px,2.4vh,34px);
     overflow:hidden;
+    animation:burnShift 600s ease-in-out infinite;
   }
 
   /* ---------- Header ---------- */
