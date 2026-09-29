@@ -16,6 +16,8 @@
     --line-strong:rgba(217,164,65,.35);
     --shabbat:#7fb2e0;
     --shabbat-soft:rgba(127,178,224,.12);
+    --yomtov:#79c58c;
+    --yomtov-soft:rgba(121,197,140,.12);
     --serif:'Frank Ruhl Libre', 'Times New Roman', serif;
     --sans:'Heebo', system-ui, sans-serif;
   }
@@ -165,6 +167,10 @@
   .panel--shabbat .panel-title{color:var(--shabbat);}
   .panel--shabbat{border-color:var(--shabbat-soft);}
   .panel--shabbat .panel-head{border-bottom-color:rgba(127,178,224,.4);}
+  .panel--yomtov .panel-title{color:var(--yomtov);}
+  .panel--yomtov{border-color:var(--yomtov-soft);}
+  .panel--yomtov .panel-head{border-bottom-color:rgba(121,197,140,.4);}
+  .panel--yomtov .row .val{color:var(--yomtov);}
   .panel-note{
     color:var(--muted);
     font-size:clamp(.7rem,.95vw,1rem);
@@ -296,11 +302,16 @@ const CONFIG = {
 
   // כל כמה דקות הלוח יטען מחדש מהאתר כדי לקלוט עריכות. 0 = כבוי.
   // How often (minutes) the board reloads itself to pick up remote edits. 0 = off.
-  autoReloadMinutes: 1,
+  autoReloadMinutes: 3,
 
   // כל כמה דקות שלוש העמודות יתחלפו במקומן (מניעת צריבת מסך). 0 = כבוי.
   // How often (minutes) the three columns rotate position (anti burn-in). 0 = off.
-  panelSwapMinutes: 15,
+  panelSwapMinutes: 3,
+
+  // קישור ל-CSV שפורסם מגוגל שיטס (הדלקת נרות/שקיעה/מוצ"ש/פרשה לפי התאריך העברי).
+  // Published Google-Sheets CSV. Rows matched to the coming Shabbat by Hebrew date.
+  // "" = disabled (use computed values only).
+  timesSheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=1809717429&single=true&output=csv",
 
   // ── זמני המניין הקבועים / Fixed minyan times ──
   // ערוך חופשי. השאר "" כדי להסתיר שורה. Add/remove rows freely.
@@ -396,9 +407,9 @@ const CONFIG = {
     </section>
 
     <!-- שבת -->
-    <section class="panel panel--shabbat">
+    <section class="panel panel--shabbat" id="eventPanel">
       <div class="panel-head">
-        <span class="panel-title">שבת קודש</span>
+        <span class="panel-title" id="shabbatTitle">שבת קודש</span>
         <span class="panel-note" id="shabbatNote"></span>
       </div>
       <div class="rows" id="shabbatRows"></div>
@@ -453,11 +464,71 @@ const CONFIG = {
     return c;
   }
   function jewishCalFor(d){
-    try { return new KZ.JewishCalendar(plainDate(d)); }
-    catch(e){ try { return new KZ.JewishCalendar(d); } catch(_){ return new KZ.JewishCalendar(); } }
+    let jc;
+    try { jc = new KZ.JewishCalendar(plainDate(d)); }
+    catch(e){ try { jc = new KZ.JewishCalendar(d); } catch(_){ jc = new KZ.JewishCalendar(); } }
+    try { jc.setInIsrael(true); } catch(_){}   // Israel parsha/yom-tov schedule
+    return jc;
   }
 
   function safe(fn){ try{ return toDate(fn()); }catch(e){ return null; } }
+
+  // ---- times sheet (published Google-Sheets CSV, matched by Hebrew date) ----
+  let SHEET = null; // Map: normalized Hebrew day+month -> row object
+  const hebNorm = s => (s||"").replace(/[^א-ת]/g,"");
+  function hebKeyFor(d){
+    try{
+      const hdf = new KZ.HebrewDateFormatter(); hdf.setHebrewFormat(true);
+      const t = hdf.format(jewishCalFor(d)).trim().split(/\s+/);
+      t.pop();                       // drop the year token, keep day + month
+      return hebNorm(t.join(""));
+    }catch(e){ return ""; }
+  }
+  function parseCSV(txt){
+    const rows=[]; let f=[], cur="", q=false;
+    for(let i=0;i<txt.length;i++){ const c=txt[i];
+      if(q){ if(c=='"'){ if(txt[i+1]=='"'){cur+='"';i++;} else q=false; } else cur+=c; }
+      else { if(c=='"') q=true;
+        else if(c==',') { f.push(cur); cur=""; }
+        else if(c=='\n'||c=='\r') { if(c=='\r'&&txt[i+1]=='\n') i++; f.push(cur); rows.push(f); f=[]; cur=""; }
+        else cur+=c; } }
+    if(cur.length||f.length){ f.push(cur); rows.push(f); }
+    return rows;
+  }
+  async function loadSheet(){
+    const url = CONFIG.timesSheetCsvUrl;
+    if(!url){ SHEET = null; return; }
+    try{
+      const rows = parseCSV(await (await fetch(url, {cache:"no-store"})).text());
+      const m = new Map();
+      // cols: 0 name,1 greg(unreliable),2 hebrew,3 candle,4 minchaErevShabbat,
+      //       5 shkia,6 sofKS,7 shiur,8 minchaShabbat,9 motzaei,10 R"T(ignored)
+      rows.slice(1).forEach(r => {
+        const key = hebNorm(r[2]);
+        if(!key) return;
+        m.set(key, {
+          name:(r[0]||"").trim(), candle:(r[3]||"").trim(), shkia:(r[5]||"").trim(),
+          motzaei:(r[9]||"").trim(), minchaES:(r[4]||"").trim(),
+          sofKS:(r[6]||"").trim(), shiur:(r[7]||"").trim(), minchaShabbat:(r[8]||"").trim(),
+        });
+      });
+      SHEET = m.size ? m : null;
+    }catch(e){ SHEET = null; }        // offline / blocked / bad data → computed fallback
+  }
+  function sheetRowForShabbat(now){
+    return SHEET ? (SHEET.get(hebKeyFor(nextDow(now,6))) || null) : null;
+  }
+  // nearest upcoming sheet event from today (Shabbat OR a weekday Yom Tov), inclusive
+  function nextEvent(now){
+    if(!SHEET) return null;
+    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    for(let i=0;i<40;i++){
+      const d = new Date(start); d.setDate(start.getDate()+i);
+      const row = SHEET.get(hebKeyFor(d));
+      if(row) return { date:d, row, isShabbat:d.getDay()===6 };
+    }
+    return null;
+  }
 
   // ---- rows renderer ----
   function renderRows(container, items){
@@ -537,36 +608,57 @@ const CONFIG = {
     return d;
   }
   function renderShabbat(now){
-    const fri = nextDow(now, 5);
-    const sat = new Date(fri); sat.setDate(fri.getDate()+1);
+    // nearest upcoming event: coming Shabbat, or an earlier weekday Yom Tov
+    const ev = nextEvent(now);
+    const isShabbat = ev ? ev.isShabbat : true;
+    const evDate = ev ? ev.date : nextDow(now, 6);
+    const row = ev ? ev.row : null;
 
-    const cFri = calFor(fri);
-    const cSat = calFor(sat);
-
-    // candle lighting = sunset(Fri) − offset
-    let candle = safe(()=>cFri.getSunset());
+    // computed fallbacks, based on the event's own eve/day
+    const eve = new Date(evDate.getFullYear(), evDate.getMonth(), evDate.getDate()-1);
+    const cEve = calFor(eve);
+    const cDay = calFor(evDate);
+    let candle = safe(()=>cEve.getSunset());
     if(candle) candle = new Date(candle.getTime() - CONFIG.candleOffsetMinutes*60000);
-
-    // motzaei
     const motzaei = CONFIG.motzaeiMethod === "tzais72"
-      ? (safe(()=>cSat.getTzais72()) || safe(()=>cSat.getTzais()))
-      :  safe(()=>cSat.getTzais());
+      ? (safe(()=>cDay.getTzais72()) || safe(()=>cDay.getTzais()))
+      :  safe(()=>cDay.getTzais());
 
-    const items = [
-      ...(CONFIG.minyanim.shabbat||[]).map(m => ({name:m.name, val:m.time})),
-      {name:"הדלקת נרות", val:fmtTime(candle), big:true},
-      {name:"מוצאי שבת",  val:fmtTime(motzaei), big:true},
-    ];
+    const candleVal  = (row && row.candle)  ? row.candle  : fmtTime(candle);
+    const shkiaVal   = (row && row.shkia)   ? row.shkia   : fmtTime(safe(()=>cEve.getSunset()));
+    const motzaeiVal = (row && row.motzaei) ? row.motzaei : fmtTime(motzaei);
+
+    const items = [];
+    if(isShabbat){
+      (CONFIG.minyanim.shabbat||[]).forEach(m => items.push({name:m.name, val:m.time}));
+    }
+    items.push({name:"הדלקת נרות", val:candleVal, big:true});
+    items.push({name:"שקיעה",      val:shkiaVal});
+    items.push({name: isShabbat ? "מוצאי שבת" : "מוצאי החג", val:motzaeiVal, big:true});
     renderRows($("shabbatRows"), items);
 
-    const jc = jewishCalFor(sat);
-    let pName = "";
-    try {
-      const hdf = new KZ.HebrewDateFormatter();
-      hdf.setHebrewFormat(true);
-      pName = hdf.formatParsha(jc) || "";
-    } catch(e){}
-    $("shabbatNote").textContent = pName ? "פרשת " + pName : "";
+    // panel title + subtitle
+    let title, note;
+    if(isShabbat){
+      title = "שבת קודש";
+      if(row && row.name){ note = row.name; }
+      else {
+        try { const hdf = new KZ.HebrewDateFormatter(); hdf.setHebrewFormat(true);
+              const p = hdf.formatParsha(jewishCalFor(evDate)) || ""; note = p ? "פרשת "+p : ""; }
+        catch(e){ note = ""; }
+      }
+    } else {
+      title = (row && row.name) ? row.name : "חג";   // e.g. יום כיפור, חג פסח
+      note  = "";
+    }
+    $("shabbatTitle").textContent = title;
+    $("shabbatNote").textContent  = note || "";
+
+    const panel = $("eventPanel");
+    if(panel){
+      panel.classList.toggle("panel--shabbat", isShabbat);
+      panel.classList.toggle("panel--yomtov", !isShabbat);
+    }
   }
 
   // ---- header dates + parsha ----
@@ -583,9 +675,9 @@ const CONFIG = {
       hdf.setHebrewFormat(true);
       $("hebrewDate").textContent = hdf.format(jc);
 
-      // parsha of the coming Shabbat (read on Saturday itself)
-      const satJc = jewishCalFor(nextDow(now,6));
-      const p = hdf.formatParsha(satJc);
+      // parsha of the coming Shabbat — prefer the sheet's name, else compute
+      const row = sheetRowForShabbat(now);
+      const p = (row && row.name) ? row.name : hdf.formatParsha(jewishCalFor(nextDow(now,6)));
       $("parsha").textContent = p && p.length ? p : "—";
 
       // special day (yom tov / rosh chodesh / fast) if the formatter offers it
@@ -604,8 +696,9 @@ const CONFIG = {
   }
 
   // ---- refresh cycles ----
-  function fullRefresh(){
+  async function fullRefresh(){
     const now = new Date();
+    await loadSheet();
     renderHeaderDates(now);
     renderMinyan();
     renderZmanim(now);
@@ -637,11 +730,13 @@ const CONFIG = {
   const sm = Number(CONFIG.panelSwapMinutes) || 0;
   if(sm > 0){
     const panels = [...document.querySelectorAll('.cols .panel')];
-    let rot = 0;
-    setInterval(() => {
-      rot = (rot + 1) % panels.length;
+    // rotation derived from the clock, so it survives page reloads
+    const apply = () => {
+      const rot = Math.floor(Date.now() / (sm * 60 * 1000)) % panels.length;
       panels.forEach((p, i) => { p.style.order = (i + rot) % panels.length; });
-    }, sm * 60 * 1000);
+    };
+    apply();
+    setInterval(apply, 10 * 1000);   // re-check often; visibly changes at each interval boundary
   }
 
   // reload from the server periodically so remote edits appear on the wall on their own
