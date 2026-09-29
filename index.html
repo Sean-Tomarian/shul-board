@@ -479,7 +479,7 @@ const CONFIG = {
     const c = calFor(now);
     const items = [
       {key:"alos",         name:"עלות השחר",            val:fmtTime(safe(()=>c.getAlosHashachar()))},
-      {key:"netz",         name:"הנץ החמה",             val:fmtTime(safe(()=>c.getSunrise())), big:true},
+      {key:"netz",         name:"הנץ החמה",             val:fmtTime(safe(()=>c.getSunrise()))},
       {key:"shmaMGA",      name:'סוף זמן ק"ש',  hint:'מג"א', val:fmtTime(safe(()=>c.getSofZmanShmaMGA()))},
       {key:"shmaGRA",      name:'סוף זמן ק"ש',  hint:'הגר"א',val:fmtTime(safe(()=>c.getSofZmanShmaGRA())), big:true},
       {key:"tfilaGRA",     name:"סוף זמן תפילה", hint:'הגר"א',val:fmtTime(safe(()=>c.getSofZmanTfilaGRA()))},
@@ -487,7 +487,7 @@ const CONFIG = {
       {key:"minchaGedola", name:"מנחה גדולה",          val:fmtTime(safe(()=>c.getMinchaGedola()))},
       {key:"minchaKetana", name:"מנחה קטנה",          val:fmtTime(safe(()=>c.getMinchaKetana()))},
       {key:"plag",         name:"פלג המנחה",          val:fmtTime(safe(()=>c.getPlagHamincha()))},
-      {key:"shkia",        name:"שקיעת החמה",         val:fmtTime(safe(()=>c.getSunset())), big:true},
+      {key:"shkia",        name:"שקיעת החמה",         val:fmtTime(safe(()=>c.getSunset()))},
       {key:"tzais",        name:"צאת הכוכבים",        val:fmtTime(safe(()=>c.getTzais()))},
     ];
 
