@@ -21,16 +21,6 @@
   }
 
   html,body{height:100%;overflow:hidden;}
-
-  /* anti burn-in: nudge the whole board a few px on a slow cycle */
-  @keyframes burnShift{
-    0%   {transform:translate(0px, 0px);}
-    20%  {transform:translate(3px, 2px);}
-    40%  {transform:translate(-2px, 3px);}
-    60%  {transform:translate(2px, -3px);}
-    80%  {transform:translate(-3px, -2px);}
-    100% {transform:translate(0px, 0px);}
-  }
   body{
     margin:0;
     background:
@@ -50,7 +40,6 @@
     padding:clamp(16px,2.4vh,34px) clamp(18px,2.4vw,44px);
     padding-block:clamp(16px,2.4vh,34px);
     overflow:hidden;
-    animation:burnShift 600s ease-in-out infinite;
   }
 
   /* ---------- Header ---------- */
@@ -308,6 +297,10 @@ const CONFIG = {
   // כל כמה דקות הלוח יטען מחדש מהאתר כדי לקלוט עריכות. 0 = כבוי.
   // How often (minutes) the board reloads itself to pick up remote edits. 0 = off.
   autoReloadMinutes: 1,
+
+  // כל כמה דקות שלוש העמודות יתחלפו במקומן (מניעת צריבת מסך). 0 = כבוי.
+  // How often (minutes) the three columns rotate position (anti burn-in). 0 = off.
+  panelSwapMinutes: 15,
 
   // ── זמני המניין הקבועים / Fixed minyan times ──
   // ערוך חופשי. השאר "" כדי להסתיר שורה. Add/remove rows freely.
@@ -639,6 +632,17 @@ const CONFIG = {
   fullRefresh();
   setInterval(tickClock, 1000*15);
   scheduleMidnight();
+
+  // rotate the three columns periodically so static text doesn't sit in one spot (anti burn-in)
+  const sm = Number(CONFIG.panelSwapMinutes) || 0;
+  if(sm > 0){
+    const panels = [...document.querySelectorAll('.cols .panel')];
+    let rot = 0;
+    setInterval(() => {
+      rot = (rot + 1) % panels.length;
+      panels.forEach((p, i) => { p.style.order = (i + rot) % panels.length; });
+    }, sm * 60 * 1000);
+  }
 
   // reload from the server periodically so remote edits appear on the wall on their own
   const rm = Number(CONFIG.autoReloadMinutes) || 0;
