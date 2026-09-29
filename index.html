@@ -20,7 +20,7 @@
     --sans:'Heebo', system-ui, sans-serif;
   }
 
-  html,body{height:100%;}
+  html,body{height:100%;overflow:hidden;}
   body{
     margin:0;
     background:
@@ -39,6 +39,7 @@
     gap:clamp(12px,1.6vh,26px);
     padding:clamp(16px,2.4vh,34px) clamp(18px,2.4vw,44px);
     padding-block:clamp(16px,2.4vh,34px);
+    overflow:hidden;
   }
 
   /* ---------- Header ---------- */
@@ -141,7 +142,7 @@
     background:linear-gradient(180deg,var(--panel-2),var(--panel));
     border:1px solid var(--line);
     border-radius:18px;
-    padding:clamp(14px,1.8vh,26px) clamp(16px,1.6vw,30px);
+    padding:clamp(10px,1.3vh,20px) clamp(16px,1.6vw,30px);
     display:flex;
     flex-direction:column;
     min-height:0;
@@ -173,22 +174,23 @@
   .rows{
     display:flex;
     flex-direction:column;
-    justify-content:space-evenly;
+    justify-content:flex-start;
     flex:1;
-    gap:clamp(2px,.5vh,8px);
+    gap:clamp(1px,.3vh,5px);
     min-height:0;
+    overflow:hidden;
   }
   .row{
     display:flex;
     align-items:baseline;
     justify-content:space-between;
     gap:.8em;
-    padding:clamp(3px,.55vh,9px) 0;
+    padding:clamp(1px,.35vh,6px) 0;
   }
   .row + .row{border-top:1px dotted var(--line);}
   .row .name{
     font-weight:500;
-    font-size:clamp(1rem,1.7vw,1.75rem);
+    font-size:clamp(.85rem,1.45vw,1.5rem);
     color:var(--ink);
     white-space:nowrap;
     overflow:hidden;
@@ -203,14 +205,14 @@
   .row .val{
     font-weight:800;
     font-variant-numeric:tabular-nums;
-    font-size:clamp(1.1rem,1.9vw,1.95rem);
+    font-size:clamp(.95rem,1.6vw,1.65rem);
     color:var(--gold-bright);
     direction:ltr;
     letter-spacing:.02em;
   }
   .panel--shabbat .row .val{color:var(--shabbat);}
   .row--big .name{font-weight:700;}
-  .row--big .val{font-size:clamp(1.25rem,2.2vw,2.3rem);}
+  .row--big .val{font-size:clamp(1.05rem,1.85vw,1.95rem);}
 
   .footnote{
     color:var(--muted);
@@ -292,6 +294,10 @@ const CONFIG = {
   candleOffsetMinutes: 20,  // הדלקת נרות = שקיעה פחות X דקות
   motzaeiMethod: "tzais72", // "tzais" (רגיל) או "tzais72" (72 דק' / רבנו תם קירוב)
 
+  // כל כמה דקות הלוח יטען מחדש מהאתר כדי לקלוט עריכות. 0 = כבוי.
+  // How often (minutes) the board reloads itself to pick up remote edits. 0 = off.
+  autoReloadMinutes: 1,
+
   // ── זמני המניין הקבועים / Fixed minyan times ──
   // ערוך חופשי. השאר "" כדי להסתיר שורה. Add/remove rows freely.
   minyanim: {
@@ -300,7 +306,7 @@ const CONFIG = {
       { name: "מנחה וערבית צמודים",         time: "18:15" },
     ],
     shabbat: [
-      { name: "מנחה ער\"ש",   time: "18:06" },
+       { name: "מנחה ער\"ש",   time: "18:06" },
       { name: "שיעור",    time: "06:30" },
       { name: "שחרית שבת",    time: "08:00" },
       { name: "קידוש קהילתי + הקפות",    time: "11:00" },
@@ -319,8 +325,11 @@ const CONFIG = {
   // מפתחות אפשריים: alos, netz, shmaMGA, shmaGRA, tfilaGRA, chatzos,
   //                 minchaGedola, minchaKetana, plag, shkia, tzais
   zmanimOverrides: {
-    // shmaGRA: "09:15",      // דוגמה: קיבוע סוף זמן ק"ש לשעה קבועה
-    // minchaKetana: false,   // דוגמה: הסתרת שורה מהעמודה
+    shmaGRA: false,       // הסתר סוף זמן ק"ש (הגר"א)
+    tfilaGRA: false,      // הסתר סוף זמן תפילה
+    minchaGedola: false,  // הסתר מנחה גדולה
+    minchaKetana: false,  // הסתר מנחה קטנה
+    plag: false,          // הסתר פלג המנחה
   },
 
   // ── שורות נוספות בעמודת "זמני היום" / Extra custom rows in the day column ──
@@ -389,7 +398,6 @@ const CONFIG = {
         <span class="panel-note" id="shabbatNote"></span>
       </div>
       <div class="rows" id="shabbatRows"></div>
-      <div class="footnote" id="shabbatFoot"></div>
     </section>
   </div>
 
@@ -555,10 +563,6 @@ const CONFIG = {
       pName = hdf.formatParsha(jc) || "";
     } catch(e){}
     $("shabbatNote").textContent = pName ? "פרשת " + pName : "";
-
-    const fmtDay = d => new Intl.DateTimeFormat("he-IL",{day:"numeric",month:"long",timeZone:CONFIG.timeZone}).format(d);
-    $("shabbatFoot").textContent =
-      `הדלקה: יום ו׳ ${fmtDay(fri)}  •  מוצ״ש: מוצאי ${fmtDay(sat)}`;
   }
 
   // ---- header dates + parsha ----
@@ -624,5 +628,12 @@ const CONFIG = {
   fullRefresh();
   setInterval(tickClock, 1000*15);
   scheduleMidnight();
+
+  // reload from the server periodically so remote edits appear on the wall on their own
+  const rm = Number(CONFIG.autoReloadMinutes) || 0;
+  if(rm > 0){
+    setTimeout(() => { try { location.reload(); } catch(e){ location.href = location.href; } },
+      rm * 60 * 1000);
+  }
 })();
 </script>
