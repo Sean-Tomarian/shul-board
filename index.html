@@ -178,11 +178,12 @@
   }
 
   .rows{
+    --rs:1;                       /* auto-fit scale, set by JS to prevent clipping */
     display:flex;
     flex-direction:column;
     justify-content:flex-start;
     flex:1;
-    gap:clamp(1px,.3vh,5px);
+    gap:calc(clamp(1px,.3vh,5px) * var(--rs));
     min-height:0;
     overflow:hidden;
   }
@@ -191,12 +192,12 @@
     align-items:baseline;
     justify-content:space-between;
     gap:.8em;
-    padding:clamp(1px,.35vh,6px) 0;
+    padding:calc(clamp(1px,.35vh,6px) * var(--rs)) 0;
   }
   .row + .row{border-top:1px dotted var(--line);}
   .row .name{
     font-weight:500;
-    font-size:clamp(.85rem,1.45vw,1.5rem);
+    font-size:calc(clamp(.85rem,1.45vw,1.5rem) * var(--rs));
     color:var(--ink);
     white-space:nowrap;
     overflow:hidden;
@@ -211,14 +212,14 @@
   .row .val{
     font-weight:800;
     font-variant-numeric:tabular-nums;
-    font-size:clamp(.95rem,1.6vw,1.65rem);
+    font-size:calc(clamp(.95rem,1.6vw,1.65rem) * var(--rs));
     color:var(--gold-bright);
     direction:ltr;
     letter-spacing:.02em;
   }
   .panel--shabbat .row .val{color:var(--shabbat);}
   .row--big .name{font-weight:700;}
-  .row--big .val{font-size:clamp(1.05rem,1.85vw,1.95rem);}
+  .row--big .val{font-size:calc(clamp(1.05rem,1.85vw,1.95rem) * var(--rs));}
 
   .footnote{
     color:var(--muted);
@@ -545,6 +546,16 @@ const CONFIG = {
     });
   }
 
+  // shrink all three columns by one shared scale until none is clipped (uniform look, no scroll)
+  function fitAll(){
+    const els = ["minyanRows","zmanimRows","shabbatRows"].map(id => $(id)).filter(Boolean);
+    const setRS = v => els.forEach(el => el.style.setProperty("--rs", v));
+    const overflowing = () => els.some(el => el.scrollHeight > el.clientHeight + 1);
+    setRS("1");
+    let rs = 1, guard = 0;
+    while(overflowing() && rs > 0.4 && guard < 30){ rs -= 0.05; setRS(rs.toFixed(2)); guard++; }
+  }
+
   // ---- fixed minyan times (weekday) ----
   function renderMinyan(){
     renderRows($("minyanRows"),
@@ -719,6 +730,7 @@ const CONFIG = {
     renderShabbat(now);
     renderStrip();
     $("zmanimNote").textContent = CONFIG.locationName;
+    requestAnimationFrame(fitAll);   // scale rows so nothing is clipped on this screen
   }
   function tickClock(){
     $("clock").textContent = new Intl.DateTimeFormat("he-IL",
@@ -737,6 +749,8 @@ const CONFIG = {
     return;
   }
   fullRefresh();
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);  // re-fit once webfont loads
+  window.addEventListener("resize", () => requestAnimationFrame(fitAll));
   setInterval(tickClock, 1000*15);
   scheduleMidnight();
 
