@@ -93,7 +93,7 @@
     font-weight:500;
     font-size:clamp(.75rem,1vw,1.05rem);
     margin-top:.3em;
-    direction:ltr;
+    direction:rtl;
     text-align:start;
     font-variant-numeric:tabular-nums;
   }
@@ -460,6 +460,7 @@ const CONFIG = {
   function calFor(d){
     const geo = new KZ.GeoLocation(CONFIG.locationName, CONFIG.latitude, CONFIG.longitude, CONFIG.elevation, CONFIG.timeZone);
     const c = new KZ.ComplexZmanimCalendar(geo);
+    try { c.setUseElevation(false); } catch(_){}   // sea-level zmanim, matching the Siddur app
     try { c.setDate(plainDate(d)); } catch(e){ try{ c.setDate(d); }catch(_){} }
     return c;
   }
@@ -499,7 +500,8 @@ const CONFIG = {
     const url = CONFIG.timesSheetCsvUrl;
     if(!url){ SHEET = null; return; }
     try{
-      const rows = parseCSV(await (await fetch(url, {cache:"no-store"})).text());
+      const bust = (url.indexOf("?") >= 0 ? "&" : "?") + "_=" + Date.now();  // defeat webview cache
+      const rows = parseCSV(await (await fetch(url + bust, {cache:"no-store"})).text());
       const m = new Map();
       // cols: 0 name,1 greg(unreliable),2 hebrew,3 candle,4 minchaErevShabbat,
       //       5 shkia,6 sofKS,7 shiur,8 minchaShabbat,9 motzaei,10 R"T(ignored)
@@ -551,19 +553,28 @@ const CONFIG = {
 
   // ---- daily zmanim ----
   function renderZmanim(now){
-    const c = calFor(now);
+    const c = calFor(now);   // sea-level (isUseElevation=false), Siddur opinions below
+
+    // derived values that aren't single library calls (match ZmanimService.kt)
+    const chatz = safe(()=>c.getChatzos());
+    const seaSunset = safe(()=>c.getSeaLevelSunset());
+    const tzeis23 = seaSunset ? new Date(seaSunset.getTime() + 23*60000) : null;   // 3 stars, Israeli Sephardi
+    let halfGra = null; try { halfGra = c.getShaahZmanisGra()/2; } catch(_){}
+    const mgOffset = (halfGra!=null) ? Math.max(halfGra, 30*60000) : 30*60000;     // stricter of ½ shaah / 30 min
+    const minchaGed = chatz ? new Date(chatz.getTime() + mgOffset) : null;
+
     const items = [
-      {key:"alos",         name:"עלות השחר",            val:fmtTime(safe(()=>c.getAlosHashachar()))},
-      {key:"netz",         name:"הנץ החמה",             val:fmtTime(safe(()=>c.getSunrise()))},
-      {key:"shmaMGA",      name:'סוף זמן ק"ש',  hint:'מג"א', val:fmtTime(safe(()=>c.getSofZmanShmaMGA()))},
+      {key:"alos",         name:"עלות השחר",            val:fmtTime(safe(()=>c.getAlos72()))},
+      {key:"netz",         name:"הנץ החמה",             val:fmtTime(safe(()=>c.getSeaLevelSunrise()))},
+      {key:"shmaMGA",      name:'סוף זמן ק"ש',  hint:'מג"א', val:fmtTime(safe(()=>c.getSofZmanShmaMGA72Minutes()))},
       {key:"shmaGRA",      name:'סוף זמן ק"ש',  hint:'הגר"א',val:fmtTime(safe(()=>c.getSofZmanShmaGRA())), big:true},
       {key:"tfilaGRA",     name:"סוף זמן תפילה", hint:'הגר"א',val:fmtTime(safe(()=>c.getSofZmanTfilaGRA()))},
-      {key:"chatzos",      name:"חצות היום",           val:fmtTime(safe(()=>c.getChatzos()))},
-      {key:"minchaGedola", name:"מנחה גדולה",          val:fmtTime(safe(()=>c.getMinchaGedola()))},
+      {key:"chatzos",      name:"חצות היום",           val:fmtTime(chatz)},
+      {key:"minchaGedola", name:"מנחה גדולה",          val:fmtTime(minchaGed)},
       {key:"minchaKetana", name:"מנחה קטנה",          val:fmtTime(safe(()=>c.getMinchaKetana()))},
       {key:"plag",         name:"פלג המנחה",          val:fmtTime(safe(()=>c.getPlagHamincha()))},
-      {key:"shkia",        name:"שקיעת החמה",         val:fmtTime(safe(()=>c.getSunset()))},
-      {key:"tzais",        name:"צאת הכוכבים",        val:fmtTime(safe(()=>c.getTzais()))},
+      {key:"shkia",        name:"שקיעת החמה",         val:fmtTime(seaSunset)},
+      {key:"tzais",        name:"צאת הכוכבים",        val:fmtTime(tzeis23)},
     ];
 
     // apply per-zman overrides/hides, then append any custom extra rows
@@ -618,11 +629,13 @@ const CONFIG = {
     const eve = new Date(evDate.getFullYear(), evDate.getMonth(), evDate.getDate()-1);
     const cEve = calFor(eve);
     const cDay = calFor(evDate);
+    // computed fallback matches the Siddur (sea-level; candle = sunset − 20, motzaei = sunset + 31)
     let candle = safe(()=>cEve.getSunset());
     if(candle) candle = new Date(candle.getTime() - CONFIG.candleOffsetMinutes*60000);
-    const motzaei = CONFIG.motzaeiMethod === "tzais72"
-      ? (safe(()=>cDay.getTzais72()) || safe(()=>cDay.getTzais()))
-      :  safe(()=>cDay.getTzais());
+    const daySunset = safe(()=>cDay.getSunset());
+    const motzaei = daySunset ? new Date(daySunset.getTime() + 31*60000) : null;
+    // ר"ת always computed (sheet's ר"ת column is inaccurate): sea-level sunset + 72 min
+    const rt = daySunset ? new Date(daySunset.getTime() + 72*60000) : null;
 
     const candleVal  = (row && row.candle)  ? row.candle  : fmtTime(candle);
     const shkiaVal   = (row && row.shkia)   ? row.shkia   : fmtTime(safe(()=>cEve.getSunset()));
@@ -635,6 +648,7 @@ const CONFIG = {
     items.push({name:"הדלקת נרות", val:candleVal, big:true});
     items.push({name:"שקיעה",      val:shkiaVal});
     items.push({name: isShabbat ? "מוצאי שבת" : "מוצאי החג", val:motzaeiVal, big:true});
+    items.push({name: 'ר"ת', val: fmtTime(rt)});
     renderRows($("shabbatRows"), items);
 
     // panel title + subtitle
@@ -666,7 +680,7 @@ const CONFIG = {
     $("clock").textContent = new Intl.DateTimeFormat("he-IL",
       {hour:"2-digit",minute:"2-digit",hour12:false,timeZone:CONFIG.timeZone}).format(now);
 
-    $("gregDate").textContent = new Intl.DateTimeFormat("en-GB",
+    $("gregDate").textContent = new Intl.DateTimeFormat("he-IL",
       {weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:CONFIG.timeZone}).format(now);
 
     try {
@@ -742,8 +756,11 @@ const CONFIG = {
   // reload from the server periodically so remote edits appear on the wall on their own
   const rm = Number(CONFIG.autoReloadMinutes) || 0;
   if(rm > 0){
-    setTimeout(() => { try { location.reload(); } catch(e){ location.href = location.href; } },
-      rm * 60 * 1000);
+    setTimeout(() => {
+      // reload to a fresh URL (changing query) so the kiosk webview can't serve a cached page
+      try { location.replace(location.origin + location.pathname + "?v=" + Date.now()); }
+      catch(e){ try { location.reload(); } catch(_){} }
+    }, rm * 60 * 1000);
   }
 })();
 </script>
