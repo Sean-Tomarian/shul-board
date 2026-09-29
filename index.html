@@ -26,6 +26,8 @@
   body{
     margin:0;
     background:
+      radial-gradient(55% 45% at 100% 0%, rgba(217,164,65,.10), transparent 60%),
+      radial-gradient(50% 42% at 0% 0%, rgba(127,178,224,.08), transparent 60%),
       radial-gradient(120% 90% at 50% -10%, #1b2532 0%, var(--bg) 45%, var(--bg-2) 100%);
     color:var(--ink);
     font-family:var(--sans);
@@ -91,6 +93,33 @@
     letter-spacing:.01em;
     text-align:center;
   }
+  .center{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:clamp(3px,.7vh,10px);
+  }
+  .clock-wrap{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:clamp(10px,1.6vw,26px);
+  }
+  .dash{
+    height:2px;
+    width:clamp(26px,4vw,90px);
+    border-radius:2px;
+    background:linear-gradient(90deg,transparent,var(--gold));
+    opacity:.75;
+  }
+  .clock-wrap .dash:last-child{ background:linear-gradient(90deg,var(--gold),transparent); }
+  .tagline{
+    font-family:var(--serif);
+    color:var(--muted);
+    font-size:clamp(.72rem,1.1vw,1.2rem);
+    letter-spacing:.05em;
+    text-align:center;
+  }
   .dates{
     text-align:start;
     justify-self:start;
@@ -146,6 +175,14 @@
     border-radius:999px;
   }
   .ribbon .tag[hidden]{display:none;}
+  .ribbon .orn{
+    flex:none;
+    width:clamp(22px,3vw,44px);
+    height:auto;
+    color:var(--gold);
+    opacity:.65;
+  }
+  .ribbon .orn-flip{ transform:scaleX(-1); }
 
   /* ---------- Columns ---------- */
   .cols{
@@ -166,12 +203,30 @@
   }
   .panel-head{
     display:flex;
-    align-items:baseline;
+    align-items:center;
+    justify-content:space-between;
     gap:.6em;
     padding-bottom:clamp(8px,1.1vh,16px);
     margin-bottom:clamp(6px,1vh,14px);
     border-bottom:2px solid var(--line-strong);
   }
+  .panel-titles{ display:flex; align-items:baseline; gap:.5em; min-width:0; }
+  .panel-icon{
+    flex:none;
+    display:grid;
+    place-items:center;
+    width:clamp(34px,3.4vw,54px);
+    height:clamp(34px,3.4vw,54px);
+    border-radius:50%;
+    color:var(--gold);
+    background:radial-gradient(circle at 32% 28%, var(--gold-soft), rgba(217,164,65,.04));
+    border:1.5px solid var(--line-strong);
+  }
+  .panel-icon svg{ width:56%; height:56%; display:block; }
+  .panel--shabbat .panel-icon{ color:var(--shabbat); border-color:rgba(127,178,224,.4);
+    background:radial-gradient(circle at 32% 28%, var(--shabbat-soft), rgba(127,178,224,.04)); }
+  .panel--yomtov .panel-icon{ color:var(--yomtov); border-color:rgba(121,197,140,.4);
+    background:radial-gradient(circle at 32% 28%, var(--yomtov-soft), rgba(121,197,140,.04)); }
   .panel-title{
     font-family:var(--serif);
     font-weight:900;
@@ -396,7 +451,14 @@ const CONFIG = {
         <div class="shul-sub" id="shulSub">לוח זמני התפילה</div>
       </div>
     </div>
-    <div class="clock" id="clock">--:--</div>
+    <div class="center">
+      <div class="clock-wrap">
+        <span class="dash"></span>
+        <div class="clock" id="clock">--:--</div>
+        <span class="dash"></span>
+      </div>
+      <div class="tagline">זמן לתפילה · זמן לחיים טובים יותר</div>
+    </div>
     <div class="dates">
       <div class="hebrew-date" id="hebrewDate">—</div>
       <div class="greg-date" id="gregDate">—</div>
@@ -404,17 +466,19 @@ const CONFIG = {
   </header>
 
   <div class="ribbon">
+    <svg class="orn" viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12 H30 M30 12 q4 -7 8 -9 q-2 5 -8 9 q6 4 8 9 q-4 -2 -8 -9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
     <span class="lead">פרשת השבוע</span>
     <span class="parsha" id="parsha">—</span>
     <span class="tag" id="specialDay" hidden></span>
+    <svg class="orn orn-flip" viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12 H30 M30 12 q4 -7 8 -9 q-2 5 -8 9 q6 4 8 9 q-4 -2 -8 -9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
   </div>
 
   <div class="cols">
     <!-- זמני התפילה הקבועים -->
     <section class="panel panel--minyan">
       <div class="panel-head">
-        <span class="panel-title">זמני התפילה</span>
-        <span class="panel-note">ימות החול</span>
+        <span class="panel-titles"><span class="panel-title">זמני התפילה</span><span class="panel-note">ימות החול</span></span>
+        <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5C10 4 6.2 4 4 5V19c2.2-1 6-1 8 .5 2-1.5 5.8-1.5 8-.5V5c-2.2-1-6-1-8 .5Zm0 0V19.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linjoin="round"/></svg></span>
       </div>
       <div class="rows" id="minyanRows"></div>
     </section>
@@ -422,8 +486,8 @@ const CONFIG = {
     <!-- זמני היום -->
     <section class="panel panel--zmanim">
       <div class="panel-head">
-        <span class="panel-title">זמני היום</span>
-        <span class="panel-note" id="zmanimNote"></span>
+        <span class="panel-titles"><span class="panel-title">זמני היום</span><span class="panel-note" id="zmanimNote"></span></span>
+        <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2.5V4.8"/><path d="M12 19.2V21.5"/><path d="M2.5 12H4.8"/><path d="M19.2 12H21.5"/><path d="M5.2 5.2 6.8 6.8"/><path d="M17.2 17.2 18.8 18.8"/><path d="M18.8 5.2 17.2 6.8"/><path d="M6.8 17.2 5.2 18.8"/></g></svg></span>
       </div>
       <div class="rows" id="zmanimRows"></div>
     </section>
@@ -431,8 +495,8 @@ const CONFIG = {
     <!-- שבת -->
     <section class="panel panel--shabbat" id="eventPanel">
       <div class="panel-head">
-        <span class="panel-title" id="shabbatTitle">שבת קודש</span>
-        <span class="panel-note" id="shabbatNote"></span>
+        <span class="panel-titles"><span class="panel-title" id="shabbatTitle">שבת קודש</span><span class="panel-note" id="shabbatNote"></span></span>
+        <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 9V19.5"/><path d="M15 9V19.5"/><path d="M6 19.5H18"/></g><path d="M9 8.5c-1.2-1.4 0-2.9 0-3.9 0 1 1.2 2.5 0 3.9Z" fill="currentColor"/><path d="M15 8.5c-1.2-1.4 0-2.9 0-3.9 0 1 1.2 2.5 0 3.9Z" fill="currentColor"/></svg></span>
       </div>
       <div class="rows" id="shabbatRows"></div>
     </section>
