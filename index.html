@@ -196,6 +196,23 @@
     gap:clamp(12px,1.6vw,26px);
     min-height:0;
   }
+  .cols.cols-2{ grid-template-columns:repeat(2,1fr); }
+  .views{ min-height:0; }
+  .view{ min-height:0; height:100%; display:grid; }
+  .view[hidden]{ display:none; }
+  .view > .cols, .view > .panel{ min-height:0; height:100%; }
+  /* two-column list for the Shabbat screen — fills the width, keeps text large */
+  .rows--two{
+    display:grid;
+    grid-auto-flow:column;
+    grid-template-columns:1fr 1fr;
+    grid-template-rows:repeat(var(--rows-per-col,8), auto);
+    align-content:start;
+    column-gap:clamp(24px,4vw,80px);
+    row-gap:clamp(2px,.6vh,10px);
+    overflow:hidden;
+  }
+  .rows--two .row{ border-top:0; }
   .panel{
     background:linear-gradient(180deg,var(--panel-2),var(--panel));
     border:1px solid var(--line);
@@ -379,9 +396,9 @@ const CONFIG = {
   // How often (minutes) the board reloads itself to pick up remote edits. 0 = off.
   autoReloadMinutes: 3,
 
-  // כל כמה דקות שלוש העמודות יתחלפו במקומן (מניעת צריבת מסך). 0 = כבוי.
-  // How often (minutes) the three columns rotate position (anti burn-in). 0 = off.
-  panelSwapMinutes: 3,
+  // כל כמה שניות מתחלפים שני המסכים (זמני יום/תפילה  ↔  שבת). 0 = ללא החלפה.
+  // How many seconds each screen is shown before flipping (weekday ↔ Shabbat). 0 = don't rotate.
+  viewRotateSeconds: 20,
 
   // שוליים נגד חיתוך קצוות בטלוויזיה (overscan). הגדל אם קצה הלוח נחתך; 0 אם ה-TV מוגדר "Just Scan".
   // Safe-area margin (%) so the TV's overscan can't crop the board edges. Raise if edges are cut; 0 if the TV is set to "Just Scan".
@@ -480,33 +497,40 @@ const CONFIG = {
     <svg class="orn orn-flip" viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12 H30 M30 12 q4 -7 8 -9 q-2 5 -8 9 q6 4 8 9 q-4 -2 -8 -9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
   </div>
 
-  <div class="cols">
-    <!-- זמני התפילה הקבועים -->
-    <section class="panel panel--minyan">
-      <div class="panel-head">
-        <span class="panel-titles"><span class="panel-title">זמני התפילה</span><span class="panel-note">ימות החול</span></span>
-        <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5C10 4 6.2 4 4 5V19c2.2-1 6-1 8 .5 2-1.5 5.8-1.5 8-.5V5c-2.2-1-6-1-8 .5Zm0 0V19.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linjoin="round"/></svg></span>
-      </div>
-      <div class="rows" id="minyanRows"></div>
-    </section>
+  <div class="views">
+    <!-- ── מסך א׳: זמני היום + זמני התפילה ── -->
+    <div class="view" id="viewWeekday">
+      <div class="cols cols-2">
+        <!-- זמני התפילה הקבועים -->
+        <section class="panel panel--minyan">
+          <div class="panel-head">
+            <span class="panel-titles"><span class="panel-title">זמני התפילה</span><span class="panel-note">ימות החול</span></span>
+            <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5C10 4 6.2 4 4 5V19c2.2-1 6-1 8 .5 2-1.5 5.8-1.5 8-.5V5c-2.2-1-6-1-8 .5Zm0 0V19.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linjoin="round"/></svg></span>
+          </div>
+          <div class="rows" id="minyanRows"></div>
+        </section>
 
-    <!-- זמני היום -->
-    <section class="panel panel--zmanim">
-      <div class="panel-head">
-        <span class="panel-titles"><span class="panel-title">זמני היום</span><span class="panel-note" id="zmanimNote"></span></span>
-        <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2.5V4.8"/><path d="M12 19.2V21.5"/><path d="M2.5 12H4.8"/><path d="M19.2 12H21.5"/><path d="M5.2 5.2 6.8 6.8"/><path d="M17.2 17.2 18.8 18.8"/><path d="M18.8 5.2 17.2 6.8"/><path d="M6.8 17.2 5.2 18.8"/></g></svg></span>
+        <!-- זמני היום -->
+        <section class="panel panel--zmanim">
+          <div class="panel-head">
+            <span class="panel-titles"><span class="panel-title">זמני היום</span><span class="panel-note" id="zmanimNote"></span></span>
+            <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2.5V4.8"/><path d="M12 19.2V21.5"/><path d="M2.5 12H4.8"/><path d="M19.2 12H21.5"/><path d="M5.2 5.2 6.8 6.8"/><path d="M17.2 17.2 18.8 18.8"/><path d="M18.8 5.2 17.2 6.8"/><path d="M6.8 17.2 5.2 18.8"/></g></svg></span>
+          </div>
+          <div class="rows" id="zmanimRows"></div>
+        </section>
       </div>
-      <div class="rows" id="zmanimRows"></div>
-    </section>
+    </div>
 
-    <!-- שבת -->
-    <section class="panel panel--shabbat" id="eventPanel">
-      <div class="panel-head">
-        <span class="panel-titles"><span class="panel-title" id="shabbatTitle">שבת קודש</span><span class="panel-note" id="shabbatNote"></span></span>
-        <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 9V19.5"/><path d="M15 9V19.5"/><path d="M6 19.5H18"/></g><path d="M9 8.5c-1.2-1.4 0-2.9 0-3.9 0 1 1.2 2.5 0 3.9Z" fill="currentColor"/><path d="M15 8.5c-1.2-1.4 0-2.9 0-3.9 0 1 1.2 2.5 0 3.9Z" fill="currentColor"/></svg></span>
-      </div>
-      <div class="rows" id="shabbatRows"></div>
-    </section>
+    <!-- ── מסך ב׳: שבת / יום טוב ── -->
+    <div class="view" id="viewShabbat" hidden>
+      <section class="panel panel--shabbat" id="eventPanel">
+        <div class="panel-head">
+          <span class="panel-titles"><span class="panel-title" id="shabbatTitle">שבת קודש</span><span class="panel-note" id="shabbatNote"></span></span>
+          <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 9V19.5"/><path d="M15 9V19.5"/><path d="M6 19.5H18"/></g><path d="M9 8.5c-1.2-1.4 0-2.9 0-3.9 0 1 1.2 2.5 0 3.9Z" fill="currentColor"/><path d="M15 8.5c-1.2-1.4 0-2.9 0-3.9 0 1 1.2 2.5 0 3.9Z" fill="currentColor"/></svg></span>
+        </div>
+        <div class="rows rows--two" id="shabbatRows"></div>
+      </section>
+    </div>
   </div>
 
   <footer class="strip" id="strip" hidden>
@@ -643,6 +667,7 @@ const CONFIG = {
     ["minyanRows","zmanimRows","shabbatRows"].forEach(id => {
       const el = $(id); if(!el) return;
       el.style.setProperty("--rs", "1");
+      if(el.clientHeight === 0) return;        // hidden view — nothing to fit
       let rs = 1, guard = 0;
       while(el.scrollHeight > el.clientHeight + 1 && rs > 0.45 && guard < 25){
         rs -= 0.05; el.style.setProperty("--rs", rs.toFixed(2)); guard++;
@@ -755,6 +780,7 @@ const CONFIG = {
     items.push({name: isShabbat ? "מוצאי שבת" : "מוצאי החג", val:motzaeiVal, big:true});
     items.push({name: 'ר"ת', val: fmtTime(rt)});
     renderRows($("shabbatRows"), items);
+    $("shabbatRows").style.setProperty("--rows-per-col", Math.ceil(items.length / 2));  // balance the 2 columns
 
     // panel title + subtitle
     let title, note;
@@ -851,17 +877,17 @@ const CONFIG = {
   setInterval(tickClock, 1000*15);
   scheduleMidnight();
 
-  // rotate the three columns periodically so static text doesn't sit in one spot (anti burn-in)
-  const sm = Number(CONFIG.panelSwapMinutes) || 0;
-  if(sm > 0){
-    const panels = [...document.querySelectorAll('.cols .panel')];
-    // rotation derived from the clock, so it survives page reloads
-    const apply = () => {
-      const rot = Math.floor(Date.now() / (sm * 60 * 1000)) % panels.length;
-      panels.forEach((p, i) => { p.style.order = (i + rot) % panels.length; });
-    };
-    apply();
-    setInterval(apply, 10 * 1000);   // re-check often; visibly changes at each interval boundary
+  // alternate between the two screens (weekday times ↔ Shabbat schedule)
+  const viewEls = [$("viewWeekday"), $("viewShabbat")].filter(Boolean);
+  function showView(i){
+    viewEls.forEach((v, k) => { v.hidden = (k !== i); });
+    requestAnimationFrame(fitAll);   // fit the now-visible screen
+  }
+  showView(0);
+  const vs = Number(CONFIG.viewRotateSeconds) || 0;
+  if(vs > 0 && viewEls.length > 1){
+    let vi = 0;
+    setInterval(() => { vi = (vi + 1) % viewEls.length; showView(vi); }, vs * 1000);
   }
 
   // reload from the server periodically so remote edits appear on the wall on their own
