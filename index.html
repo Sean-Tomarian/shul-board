@@ -178,11 +178,15 @@ const CONFIG = {
   // אם קישור ריק "" — נעשה שימוש בנתונים הקבועים שבהמשך (placeholders).
   // בכל טאב: שורה ראשונה = כותרות (תתעלם), אח"כ שורות מידע.
   //   • זמנים:      פרשה | לועזי | עברי | הדלקת נרות | ... | שקיעה | ... | ערבית/צאת שבת   (הקיים)
-  //   • שיעורים:    שם | שעה | יום           (יום: אות א-ו/ז או טקסט חופשי; שם עד ~28 תווים)
-  //   • דבר תורה:   טקסט | מקור             (שורה לכל יום — מתחלף אוטומטית; טקסט עד ~380 תווים)
-  //   • הודעות:     טקסט | בתוקף עד (YYYY-MM-DD, לא חובה — מוסתר אחרי התאריך; עד ~70 תווים, עד ~6 שורות)
+  //   • שיעורים:    שם | שעה | יום           (יום: אות א-ו/ז או טקסט; שם עד ~28 תווים)
+  //   • דבר תורה:   טקסט | מקור             (מספר שורות — מתחלף בכל הצגה; טקסט עד ~380 תווים)
+  //   • הודעות:     טקסט | בתוקף עד (YYYY-MM-DD, לא חובה — מוסתר אחרי התאריך; עד ~70 תווים)
   //   • מזל טוב:    טקסט | בתוקף עד (לא חובה; עד ~70 תווים)
+  //   עמודת "Disabled" (רשות): הוסף עמודת תיבת-סימון בשם "Disabled" בכל טאב.
+  //     שורה מסומנת (✓) תוסתר; לא מסומנת = מוצגת. (חלופה: עמודת "פעיל" — שם שמכובה מסתיר.)
+  //     אפשר להוסיף בכל מקום; שאר העמודות נשארות בסדר הקיים.
   //   הערה: טקסט ארוך מהמומלץ יוקטן אוטומטית כדי להיכנס (לא ייחתך), אך ייראה קטן יותר.
+  //   שיעורים ממוינים אוטומטית לפי יום ואז שעה — אפשר פשוט להוסיף שורות בסוף.
   timesSheetCsvUrl:         "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=1809717429&single=true&output=csv",
   shiurimSheetUrl:          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=1642831187&single=true&output=csv",
   dvarTorahSheetUrl:        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=5732209&single=true&output=csv",
@@ -412,6 +416,17 @@ const CONFIG = {
   function notExpired(until){ until=(until||"").trim(); if(!until) return true;
     const t=Date.parse(until); if(isNaN(t)) return true;
     const today=new Date(); today.setHours(0,0,0,0); return t>=today.getTime(); }
+  // row-visibility from the header: a "Disabled" column hides checked rows;
+  // a "פעיל/enabled" column hides rows explicitly turned off. Detected by header name.
+  function enabledFilter(rows){
+    if(!rows||!rows[0]) return ()=>true;
+    const h=rows[0].map(x=>(x||"").trim());
+    const di=h.findIndex(x=>/disabled|מבוטל|מוסתר|לא ?פעיל/i.test(x));
+    if(di>=0) return r=> !/^(true|1|yes|y|כן|v|✓|✔|on)$/i.test((r[di]||"").trim());  // checked → hide
+    const ei=h.findIndex(x=>/פעיל|מוצג|enabled|active|show/i.test(x));
+    if(ei>=0) return r=> !/^(false|0|no|לא|off|-|כבוי)$/i.test((r[ei]||"").trim());   // off → hide
+    return ()=>true;
+  }
 
   async function loadAll(){
     const [t,sh,dv,an,mz]=await Promise.all([
@@ -425,26 +440,26 @@ const CONFIG = {
         m.set(k,{ name:(r[0]||"").trim(), candle:(r[3]||"").trim(), shkia:(r[5]||"").trim(), motzaei:(r[9]||"").trim() }); });
       SHEET=m.size?m:null;
     } else SHEET=null;
-    // shiurim: name | time | day
-    DATA.shiurim = sh ? sh.slice(1).map(r=>({name:(r[0]||"").trim(),time:(r[1]||"").trim(),day:(r[2]||"").trim()})).filter(x=>x.name) : null;
-    // dvar torah: text | source
-    DATA.dvar = dv ? dv.slice(1).map(r=>({text:(r[0]||"").trim(),source:(r[1]||"").trim()})).filter(x=>x.text) : null;
-    // announcements: text | until
-    DATA.announce = an ? an.slice(1).map(r=>({text:(r[0]||"").trim(),until:(r[1]||"").trim()})).filter(x=>x.text&&notExpired(x.until)).map(x=>x.text) : null;
-    // mazal tov: text | until
-    DATA.mazal = mz ? mz.slice(1).map(r=>({text:(r[0]||"").trim(),until:(r[1]||"").trim()})).filter(x=>x.text&&notExpired(x.until)).map(x=>x.text) : null;
+    // shiurim: name | time | day  (+ optional פעיל)
+    DATA.shiurim = sh ? sh.slice(1).filter(enabledFilter(sh)).map(r=>({name:(r[0]||"").trim(),time:(r[1]||"").trim(),day:(r[2]||"").trim()})).filter(x=>x.name) : null;
+    // dvar torah: text | source  (+ optional פעיל)
+    DATA.dvar = dv ? dv.slice(1).filter(enabledFilter(dv)).map(r=>({text:(r[0]||"").trim(),source:(r[1]||"").trim()})).filter(x=>x.text) : null;
+    // announcements: text | until  (+ optional פעיל)
+    DATA.announce = an ? an.slice(1).filter(enabledFilter(an)).map(r=>({text:(r[0]||"").trim(),until:(r[1]||"").trim()})).filter(x=>x.text&&notExpired(x.until)).map(x=>x.text) : null;
+    // mazal tov: text | until  (+ optional פעיל)
+    DATA.mazal = mz ? mz.slice(1).filter(enabledFilter(mz)).map(r=>({text:(r[0]||"").trim(),until:(r[1]||"").trim()})).filter(x=>x.text&&notExpired(x.until)).map(x=>x.text) : null;
   }
 
   // content getters — live sheet data when present, else CONFIG placeholders
-  const getShiurim = () => DATA.shiurim || CONFIG.shiurim || [];
+  function shiurDayOrder(d){ const c=(d||"").replace(/[׳'"]/g,"").trim(); const i="אבגדהוז".indexOf(c[0]||""); return i>=0?i:99; }
+  function shiurTimeOrder(t){ const m=/^(\d{1,2}):(\d{2})$/.exec((t||"").trim()); return m?(+m[1]*60+ +m[2]):9999; }
+  const getShiurim = () => (DATA.shiurim || CONFIG.shiurim || []).slice()
+    .sort((a,b)=> shiurDayOrder(a.day)-shiurDayOrder(b.day) || shiurTimeOrder(a.time)-shiurTimeOrder(b.time));
   const getAnnouncements = () => DATA.announce || CONFIG.announcements || [];
   const getMazal = () => DATA.mazal || CONFIG.mazalTov || [];
-  function getDvar(now){
-    if(DATA.dvar && DATA.dvar.length){
-      const start=new Date(now.getFullYear(),0,0);
-      const doy=Math.floor((now-start)/86400000);       // day-of-year → rotates daily
-      return DATA.dvar[doy % DATA.dvar.length];
-    }
+  let dvarIdx=-1;
+  function getDvar(){   // rotates to the next row each time the דבר-תורה panel is rendered
+    if(DATA.dvar && DATA.dvar.length){ dvarIdx=(dvarIdx+1)%DATA.dvar.length; return DATA.dvar[dvarIdx]; }
     return CONFIG.dvarTorah || null;
   }
   function dvarHtml(dv){
@@ -650,7 +665,9 @@ const CONFIG = {
     return "weekday";
   }
   function screenHasContent(name){
-    if(name==="community"){ const dv=getDvar(new Date()); return !!(getAnnouncements().length||getMazal().length||(dv&&dv.text)); }
+    // דבר תורה + הודעות already appear on the Tefillot screen, so Community is only
+    // worth showing when there's a מזל טוב (its one non-duplicated content).
+    if(name==="community"){ return getMazal().length>0; }
     return true;   // today / tefillot / shabbat always have core data
   }
   let rotTimer=null, rotIdx=0, curMode=null;
