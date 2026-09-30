@@ -138,8 +138,9 @@
   .bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(4px,.9vh,12px);}
   .bullets li{font-size:clamp(1rem,1.5vw,1.6rem);line-height:1.35;padding-inline-start:1em;position:relative;}
   .bullets li::before{content:"•";color:var(--gold);position:absolute;inset-inline-start:0;}
-  .dvar{font-family:var(--serif);font-size:clamp(1.15rem,2vw,2.1rem);line-height:1.5;text-align:center;}
-  .dvar .src{display:block;color:var(--muted);font-size:.6em;margin-top:.6em;}
+  .dvar{font-family:var(--serif);font-size:clamp(1.1rem,1.9vw,2rem);line-height:1.55;text-align:start;}
+  .dvar b{color:#9a6b18;font-weight:800;}
+  .dvar .src{display:block;color:var(--muted);font-size:.6em;margin-top:.7em;text-align:center;}
 
   /* bottom rotating message */
   .ticker{grid-column:1 / -1;text-align:center;color:var(--muted);font-family:var(--serif);
@@ -445,7 +446,22 @@ const CONFIG = {
     }
     return CONFIG.dvarTorah || null;
   }
-  function dvarHtml(dv){ return dv?`${dv.text||""}${dv.source?`<span class="src">${dv.source}</span>`:""}`:""; }
+  function dvarHtml(dv){
+    if(!dv||!dv.text) return "";
+    let t=String(dv.text);
+    t=t.replace(/\r\n|\r|\n/g,"<br>");                       // honor sheet line breaks
+    t=t.replace(/(^|<br>)\s*(השאלה:)/,'$1<b>$2</b> ');       // bold "השאלה:"
+    t=t.replace(/\s*(התשובה:)/,'<br><br><b>$1</b> ');        // answer on its own line, bold
+    return `<div class="dvar-text">${t}</div>${dv.source?`<span class="src">${dv.source}</span>`:""}`;
+  }
+  const DAYNAMES={'א':'ראשון','ב':'שני','ג':'שלישי','ד':'רביעי','ה':'חמישי','ו':'שישי','ז':'שבת','ש':'שבת'};
+  function dayLabel(d){ d=(d||"").trim(); if(!d) return "";
+    const c=d.replace(/[׳'"]/g,"");
+    if(/^[א-ז]$/.test(c)) return "יום "+DAYNAMES[c];
+    const m=/^([א-ז])\s*[-–]\s*([א-ז])$/.exec(c);
+    if(m) return "ימים "+DAYNAMES[m[1]]+"–"+DAYNAMES[m[2]];
+    return d;   // already descriptive (כל יום / לאחר ערבית …)
+  }
   function nextDow(base,dow){ const d=new Date(base.getFullYear(),base.getMonth(),base.getDate());
     d.setDate(d.getDate()+((dow-d.getDay()+7)%7)); return d; }
   function nextEventRow(now){ if(!SHEET) return null;
@@ -563,7 +579,7 @@ const CONFIG = {
     const shiurList=getShiurim();
     const ns=nextUpcoming(now,shiurList.filter(s=>/^\d{1,2}:\d{2}$/.test(s.time||"")));
     const shiur=ns||shiurList[0];
-    renderRows($("nextShiur"), shiur?[{name:shiur.name,val:shiur.time|| (shiur.day||""),big:true}].concat(shiur.day&&shiur.time?[{name:shiur.day,val:""}]:[]):[]);
+    renderRows($("nextShiur"), shiur?[{name:shiur.name,hint:dayLabel(shiur.day),val:shiur.time||"",big:true}]:[]);
     // ticker
     const tm=CONFIG.tickerMessages||[]; $("ticker").innerHTML=tm.length?tm[Math.floor(Date.now()/15000)%tm.length]:"";
     // hide empty
@@ -573,7 +589,7 @@ const CONFIG = {
 
   function renderTefillot(now){
     renderRows($("tefRows"),(CONFIG.tefillot||[]).map(t=>({name:t.name,val:t.time,big:true})));
-    renderRows($("shiurRows"),getShiurim().map(s=>({name:s.name,hint:s.day,val:s.time})));
+    renderRows($("shiurRows"),getShiurim().map(s=>({name:s.name,hint:dayLabel(s.day),val:s.time})));
     const dv=getDvar(now);
     $("tefDvar").innerHTML=dvarHtml(dv);
     const a=$("tefAnnounce"); a.innerHTML=""; getAnnouncements().forEach(x=>{const li=document.createElement("li");li.textContent=x;a.appendChild(li);});
