@@ -8,459 +8,240 @@
   @import url('https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;700;900&family=Heebo:wght@400;500;700;800&display=swap');
 
   :root{
-    --bg:#0f141b;
-    --bg-2:#0b0f15;
-    --panel:#171e28;
-    --panel-2:#1c2531;
-    --ink:#f4ede0;
-    --muted:#98a3b3;
-    --gold:#d9a441;
-    --gold-bright:#eec06a;
-    --gold-soft:rgba(217,164,65,.13);
-    --line:rgba(244,237,224,.09);
-    --line-strong:rgba(217,164,65,.35);
-    --shabbat:#7fb2e0;
-    --shabbat-soft:rgba(127,178,224,.12);
-    --yomtov:#79c58c;
-    --yomtov-soft:rgba(121,197,140,.12);
-    --serif:'Frank Ruhl Libre', 'Times New Roman', serif;
-    --sans:'Heebo', system-ui, sans-serif;
+    --bg:#0d1220; --bg-2:#0a0e18;
+    --panel:#151d2b; --panel-2:#1b2536;
+    --ink:#f5efe2; --muted:#98a6bd;
+    --gold:#d9a441; --gold-bright:#eec06a; --gold-soft:rgba(217,164,65,.14);
+    --ivory:#f5ecd9; --ivory-ink:#2b2418;
+    --line:rgba(245,239,226,.10); --line-gold:rgba(217,164,65,.38);
+    --shabbat:#8ab6e6; --shabbat-soft:rgba(138,182,230,.13);
+    --yomtov:#7fcf95; --yomtov-soft:rgba(127,207,149,.13);
+    --serif:'Frank Ruhl Libre','Times New Roman',serif;
+    --sans:'Heebo',system-ui,sans-serif;
+    --overscan:0px;
   }
 
   html,body{height:100%;overflow:hidden;}
   body{
-    margin:0;
+    margin:0; color:var(--ink); font-family:var(--sans); direction:rtl;
+    -webkit-font-smoothing:antialiased;
     background:
       radial-gradient(55% 45% at 100% 0%, rgba(217,164,65,.10), transparent 60%),
-      radial-gradient(50% 42% at 0% 0%, rgba(127,178,224,.08), transparent 60%),
-      radial-gradient(120% 90% at 50% -10%, #1b2532 0%, var(--bg) 45%, var(--bg-2) 100%);
-    color:var(--ink);
-    font-family:var(--sans);
-    direction:rtl;
-    -webkit-font-smoothing:antialiased;
+      radial-gradient(50% 42% at 0% 0%, rgba(138,182,230,.09), transparent 60%),
+      radial-gradient(130% 100% at 50% -10%, #17223a 0%, var(--bg) 48%, var(--bg-2) 100%);
   }
+  *{box-sizing:border-box;}
 
   .board{
-    position:fixed;          /* pin to viewport so a reload can't scroll/shift the board */
-    inset:var(--overscan,0); /* safe-area margin so a TV's overscan can't crop the edges */
-    box-sizing:border-box;
-    display:grid;
-    grid-template-rows:auto auto 1fr auto;
-    gap:clamp(12px,1.6vh,26px);
-    padding:clamp(16px,2.4vh,34px) clamp(18px,2.4vw,44px);
-    padding-block:clamp(16px,2.4vh,34px);
+    position:fixed; inset:var(--overscan);
+    display:grid; grid-template-rows:auto auto 1fr; gap:clamp(10px,1.5vh,22px);
+    padding:clamp(14px,2.2vh,30px) clamp(16px,2.2vw,40px);
     overflow:hidden;
   }
 
-  /* ---------- Header ---------- */
+  /* ---------------- Header ---------------- */
   header{
-    display:grid;
-    grid-template-columns:1fr auto 1fr;
-    align-items:center;
-    gap:clamp(12px,2vw,40px);
-    padding-bottom:clamp(10px,1.4vh,20px);
-    border-bottom:1px solid var(--line);
+    display:grid; grid-template-columns:1fr auto 1fr; align-items:center;
+    gap:clamp(10px,2vw,36px);
+    padding-bottom:clamp(8px,1.2vh,16px); border-bottom:1px solid var(--line);
   }
-  .brand{
-    display:flex;
-    align-items:center;
-    gap:clamp(8px,1vw,16px);
-  }
-  .brand-logo{
-    height:clamp(46px,6vw,84px);
-    width:auto;
-    flex:none;
-    border-radius:12px;
-    background:#fff;           /* logo art is on white — show it as a clean badge on the dark board */
-    padding:clamp(3px,.5vw,6px);
-  }
-  .shul-name{
-    font-family:var(--serif);
-    font-weight:900;
-    font-size:clamp(1.4rem,2.9vw,3rem);
-    line-height:1.05;
-    letter-spacing:.01em;
-  }
-  .shul-sub{
-    color:var(--muted);
-    font-weight:500;
-    font-size:clamp(.75rem,1vw,1.05rem);
-    margin-top:.25em;
-  }
-  .clock{
-    font-family:var(--sans);
-    font-weight:800;
-    font-variant-numeric:tabular-nums;
-    font-size:clamp(2.6rem,6.4vw,7rem);
-    line-height:.9;
-    color:var(--gold-bright);
-    text-shadow:0 0 34px rgba(217,164,65,.28);
-    letter-spacing:.01em;
-    text-align:center;
-  }
-  .center{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:clamp(3px,.7vh,10px);
-  }
-  .clock-wrap{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:clamp(10px,1.6vw,26px);
-  }
-  .dash{
-    height:2px;
-    width:clamp(26px,4vw,90px);
-    border-radius:2px;
-    background:linear-gradient(90deg,transparent,var(--gold));
-    opacity:.75;
-  }
-  .clock-wrap .dash:last-child{ background:linear-gradient(90deg,var(--gold),transparent); }
-  .tagline{
-    font-family:var(--serif);
-    color:var(--muted);
-    font-size:clamp(.72rem,1.1vw,1.2rem);
-    letter-spacing:.05em;
-    text-align:center;
-  }
-  .dates{
-    text-align:start;
-    justify-self:start;
-  }
-  .hebrew-date{
-    font-family:var(--serif);
-    font-weight:700;
-    font-size:clamp(1.1rem,2.3vw,2.35rem);
-    line-height:1.1;
-    color:var(--ink);
-  }
-  .greg-date{
-    color:var(--muted);
-    font-weight:500;
-    font-size:clamp(.75rem,1vw,1.05rem);
-    margin-top:.3em;
-    direction:rtl;
-    text-align:start;
-    font-variant-numeric:tabular-nums;
-  }
+  .brand{display:flex;align-items:center;gap:clamp(8px,1vw,16px);}
+  .brand-logo{height:clamp(44px,5.5vw,80px);width:auto;flex:none;border-radius:12px;background:#fff;padding:clamp(3px,.5vw,6px);}
+  .shul-name{font-family:var(--serif);font-weight:900;font-size:clamp(1.3rem,2.7vw,2.9rem);line-height:1.05;}
+  .shul-sub{color:var(--muted);font-weight:500;font-size:clamp(.72rem,1vw,1.05rem);margin-top:.25em;}
+  .center{display:flex;flex-direction:column;align-items:center;gap:clamp(2px,.6vh,8px);}
+  .clock-wrap{display:flex;align-items:center;justify-content:center;gap:clamp(10px,1.5vw,24px);}
+  .dash{height:2px;width:clamp(24px,3.6vw,80px);border-radius:2px;background:linear-gradient(90deg,transparent,var(--gold));opacity:.75;}
+  .clock-wrap .dash:last-child{background:linear-gradient(90deg,var(--gold),transparent);}
+  .clock{font-family:var(--sans);font-weight:800;font-variant-numeric:tabular-nums;font-size:clamp(2.4rem,6vw,6.6rem);line-height:.9;color:var(--gold-bright);text-shadow:0 0 34px rgba(217,164,65,.28);}
+  .tagline{font-family:var(--serif);color:var(--muted);font-size:clamp(.72rem,1.1vw,1.2rem);letter-spacing:.05em;text-align:center;}
+  .dates{justify-self:start;text-align:start;}
+  .hebrew-date{font-family:var(--serif);font-weight:700;font-size:clamp(1.05rem,2.1vw,2.2rem);line-height:1.1;}
+  .greg-date{color:var(--muted);font-weight:500;font-size:clamp(.72rem,1vw,1.05rem);margin-top:.25em;direction:rtl;}
 
-  /* ---------- Parsha ribbon ---------- */
+  /* ---------------- Parsha ribbon ---------------- */
   .ribbon{
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    gap:clamp(10px,1.5vw,26px);
-    padding:clamp(8px,1.2vh,16px) clamp(14px,2vw,30px);
-    background:var(--gold-soft);
-    border:1px solid var(--line-strong);
-    border-radius:14px;
-    flex-wrap:wrap;
+    display:flex;align-items:center;justify-content:center;gap:clamp(10px,1.5vw,24px);flex-wrap:wrap;
+    padding:clamp(6px,1vh,14px) clamp(14px,2vw,28px);
+    background:var(--gold-soft);border:1px solid var(--line-gold);border-radius:14px;
   }
-  .ribbon .lead{
-    font-weight:500;
-    color:var(--muted);
-    font-size:clamp(.8rem,1.15vw,1.2rem);
-    letter-spacing:.14em;
-  }
-  .ribbon .parsha{
-    font-family:var(--serif);
-    font-weight:700;
-    color:var(--gold-bright);
-    font-size:clamp(1.15rem,2.4vw,2.4rem);
-  }
-  .ribbon .tag{
-    font-weight:700;
-    color:var(--ink);
-    font-size:clamp(.85rem,1.3vw,1.35rem);
-    background:rgba(244,237,224,.07);
-    border:1px solid var(--line);
-    padding:.2em .8em;
-    border-radius:999px;
-  }
+  .ribbon .orn{flex:none;width:clamp(20px,2.6vw,40px);color:var(--gold);opacity:.65;}
+  .ribbon .orn-flip{transform:scaleX(-1);}
+  .ribbon .lead{color:var(--muted);font-weight:500;font-size:clamp(.78rem,1.1vw,1.2rem);letter-spacing:.12em;}
+  .ribbon .parsha{font-family:var(--serif);font-weight:700;color:var(--gold-bright);font-size:clamp(1.1rem,2.3vw,2.3rem);}
+  .ribbon .tag{font-weight:700;background:rgba(245,239,226,.08);border:1px solid var(--line);padding:.2em .8em;border-radius:999px;font-size:clamp(.82rem,1.2vw,1.3rem);}
   .ribbon .tag[hidden]{display:none;}
-  .ribbon .orn{
-    flex:none;
-    width:clamp(22px,3vw,44px);
-    height:auto;
-    color:var(--gold);
-    opacity:.65;
-  }
-  .ribbon .orn-flip{ transform:scaleX(-1); }
 
-  /* ---------- Columns ---------- */
-  .cols{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:clamp(12px,1.6vw,26px);
-    min-height:0;
-  }
-  .cols.cols-2{ grid-template-columns:repeat(2,1fr); }
-  .views{ min-height:0; }
-  .view{ min-height:0; height:100%; display:grid; }
-  .view[hidden]{ display:none; }
-  .view > .cols, .view > .panel{ min-height:0; height:100%; }
-  /* two-column list for the Shabbat screen — fills the width, keeps text large */
-  .rows--two{
-    display:grid;
-    grid-auto-flow:column;
-    grid-template-columns:1fr 1fr;
-    grid-template-rows:repeat(var(--rows-per-col,8), auto);
-    align-content:start;
-    column-gap:clamp(24px,4vw,80px);
-    row-gap:clamp(2px,.6vh,10px);
-    overflow:hidden;
-  }
-  .rows--two .row{ border-top:0; }
-  .panel{
+  /* ---------------- Stage / screens (crossfade) ---------------- */
+  .stage{position:relative;min-height:0;}
+  .screen{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .8s ease;pointer-events:none;
+    display:grid;gap:clamp(10px,1.4vw,22px);}
+  .screen.active{opacity:1;visibility:visible;}
+  @media (prefers-reduced-motion:reduce){ .screen{transition:none;} }
+
+  .grid-3{grid-template-columns:1.05fr 1.25fr 1fr;grid-template-rows:1fr auto;}
+  .grid-3 .full{grid-column:1 / -1;}
+  .grid-shabbat{grid-template-columns:repeat(3,1fr);grid-template-rows:auto 1fr;}
+  .grid-shabbat .next-card{grid-column:1 / -1;}
+  .grid-comm{grid-template-columns:1fr 1fr;}
+
+  /* ---------------- Cards ---------------- */
+  .card{
     background:linear-gradient(180deg,var(--panel-2),var(--panel));
-    border:1px solid var(--line);
-    border-radius:18px;
-    padding:clamp(10px,1.3vh,20px) clamp(16px,1.6vw,30px);
-    display:flex;
-    flex-direction:column;
-    min-height:0;
-    box-shadow:0 18px 40px rgba(0,0,0,.28);
+    border:1px solid var(--line);border-radius:18px;
+    padding:clamp(12px,1.5vh,24px) clamp(14px,1.5vw,26px);
+    display:flex;flex-direction:column;min-height:0;box-shadow:0 16px 36px rgba(0,0,0,.30);
   }
-  .panel-head{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:.6em;
-    padding-bottom:clamp(8px,1.1vh,16px);
-    margin-bottom:clamp(6px,1vh,14px);
-    border-bottom:2px solid var(--line-strong);
-  }
-  .panel-titles{ display:flex; align-items:baseline; gap:.5em; min-width:0; }
-  .panel-icon{
-    flex:none;
-    display:grid;
-    place-items:center;
-    width:clamp(34px,3.4vw,54px);
-    height:clamp(34px,3.4vw,54px);
-    border-radius:50%;
-    color:var(--gold);
-    background:radial-gradient(circle at 32% 28%, var(--gold-soft), rgba(217,164,65,.04));
-    border:1.5px solid var(--line-strong);
-  }
-  .panel-icon svg{ width:56%; height:56%; display:block; }
-  .panel--shabbat .panel-icon{ color:var(--shabbat); border-color:rgba(127,178,224,.4);
-    background:radial-gradient(circle at 32% 28%, var(--shabbat-soft), rgba(127,178,224,.04)); }
-  .panel--yomtov .panel-icon{ color:var(--yomtov); border-color:rgba(121,197,140,.4);
-    background:radial-gradient(circle at 32% 28%, var(--yomtov-soft), rgba(121,197,140,.04)); }
-  .panel-title{
-    font-family:var(--serif);
-    font-weight:900;
-    font-size:clamp(1.25rem,2.2vw,2.2rem);
-    color:var(--gold);
-  }
-  .panel--shabbat .panel-title{color:var(--shabbat);}
-  .panel--shabbat{border-color:var(--shabbat-soft);}
-  .panel--shabbat .panel-head{border-bottom-color:rgba(127,178,224,.4);}
-  .panel--yomtov .panel-title{color:var(--yomtov);}
-  .panel--yomtov{border-color:var(--yomtov-soft);}
-  .panel--yomtov .panel-head{border-bottom-color:rgba(121,197,140,.4);}
-  .panel--yomtov .row .val{color:var(--yomtov);}
-  .panel-note{
-    color:var(--muted);
-    font-size:clamp(.7rem,.95vw,1rem);
-    font-weight:500;
-  }
+  .card--ivory{background:linear-gradient(180deg,#f7f1e4,#efe4d0);color:var(--ivory-ink);border-color:var(--line-gold);}
+  .card--ivory .card-note,.card--ivory .muted{color:#6b5c3f;}
+  .card--gold{background:linear-gradient(180deg,#2a2440,#20233a);border-color:var(--line-gold);}
+  .card-head{display:flex;align-items:center;justify-content:space-between;gap:.6em;
+    padding-bottom:clamp(6px,1vh,14px);margin-bottom:clamp(6px,1vh,12px);border-bottom:2px solid var(--line-gold);}
+  .card-title{font-family:var(--serif);font-weight:900;font-size:clamp(1.15rem,2vw,2rem);color:var(--gold);}
+  .card--ivory .card-title{color:#9a6b18;}
+  .card-note{color:var(--muted);font-weight:500;font-size:clamp(.7rem,.95vw,1rem);}
+  .card-icon{flex:none;display:grid;place-items:center;width:clamp(32px,3.2vw,50px);height:clamp(32px,3.2vw,50px);
+    border-radius:50%;color:var(--gold);background:radial-gradient(circle at 32% 28%,var(--gold-soft),rgba(217,164,65,.04));border:1.5px solid var(--line-gold);}
+  .card-icon svg{width:56%;height:56%;}
+  .card--ivory .card-icon{color:#9a6b18;background:rgba(154,107,24,.10);border-color:rgba(154,107,24,.35);}
 
-  .rows{
-    --rs:1;                       /* auto-fit scale, set by JS to prevent clipping */
-    display:flex;
-    flex-direction:column;
-    justify-content:flex-start;
-    flex:1;
-    gap:calc(clamp(1px,.3vh,5px) * var(--rs));
-    min-height:0;
-    overflow:hidden;
-  }
-  .row{
-    display:flex;
-    align-items:baseline;
-    justify-content:space-between;
-    gap:.8em;
-    padding:calc(clamp(1px,.35vh,6px) * var(--rs)) 0;
-  }
+  /* rows list */
+  .rows{--rs:1;display:flex;flex-direction:column;justify-content:flex-start;flex:1;gap:calc(clamp(1px,.4vh,6px)*var(--rs));min-height:0;overflow:hidden;}
+  .row{display:flex;align-items:baseline;justify-content:space-between;gap:.8em;padding:calc(clamp(2px,.5vh,8px)*var(--rs)) 0;}
   .row + .row{border-top:1px dotted var(--line);}
-  .row .name{
-    font-weight:500;
-    font-size:calc(clamp(.85rem,1.45vw,1.5rem) * var(--rs));
-    color:var(--ink);
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
-  }
-  .row .name .hint{
-    color:var(--muted);
-    font-size:.7em;
-    font-weight:400;
-    margin-inline-start:.4em;
-  }
-  .row .val{
-    font-weight:800;
-    font-variant-numeric:tabular-nums;
-    font-size:calc(clamp(.95rem,1.6vw,1.65rem) * var(--rs));
-    color:var(--gold-bright);
-    direction:ltr;
-    letter-spacing:.02em;
-  }
+  .card--ivory .row + .row{border-top-color:rgba(154,107,24,.22);}
+  .row .name{font-weight:500;font-size:calc(clamp(1rem,1.5vw,1.7rem)*var(--rs));white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .row .name .hint{color:var(--muted);font-size:.7em;margin-inline-start:.4em;}
+  .card--ivory .row .name .hint{color:#7a6a48;}
+  .row .val{font-weight:800;font-variant-numeric:tabular-nums;font-size:calc(clamp(1.05rem,1.7vw,1.85rem)*var(--rs));color:var(--gold-bright);direction:ltr;}
+  .card--ivory .row .val{color:#9a6b18;}
+  .row--big .val{font-size:calc(clamp(1.2rem,2vw,2.1rem)*var(--rs));}
+  .row.past{opacity:.4;}
+
+  /* next-event hero card */
+  .next-card{display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;gap:clamp(4px,1vh,14px);}
+  .next-card .ne-label{font-family:var(--serif);color:var(--gold);font-weight:700;font-size:clamp(1rem,1.7vw,1.7rem);}
+  .next-card .ne-name{font-family:var(--serif);font-weight:900;font-size:clamp(1.6rem,3.4vw,3.6rem);line-height:1.05;}
+  .next-card .ne-time{font-weight:800;font-variant-numeric:tabular-nums;font-size:clamp(2.6rem,6vw,6rem);line-height:.95;color:var(--gold-bright);text-shadow:0 0 30px rgba(217,164,65,.25);direction:ltr;}
+  .next-card .ne-count{color:var(--muted);font-size:clamp(.85rem,1.3vw,1.4rem);font-weight:600;}
+
+  /* section list (shabbat columns) */
+  .section-title{font-family:var(--serif);font-weight:700;color:var(--gold);font-size:clamp(1rem,1.6vw,1.7rem);
+    display:flex;align-items:center;gap:.4em;margin-bottom:.3em;}
+  .panel--shabbat .card-title,.panel--shabbat .section-title{color:var(--shabbat);}
   .panel--shabbat .row .val{color:var(--shabbat);}
-  .row--big .name{font-weight:700;}
-  .row--big .val{font-size:calc(clamp(1.05rem,1.85vw,1.95rem) * var(--rs));}
+  .panel--shabbat .card-head{border-bottom-color:rgba(138,182,230,.4);}
+  .panel--shabbat .card-icon{color:var(--shabbat);border-color:rgba(138,182,230,.4);background:radial-gradient(circle at 32% 28%,var(--shabbat-soft),transparent);}
+  .panel--yomtov .card-title,.panel--yomtov .section-title{color:var(--yomtov);}
+  .panel--yomtov .row .val{color:var(--yomtov);}
+  .panel--yomtov .card-icon{color:var(--yomtov);border-color:rgba(127,207,149,.4);}
 
-  .footnote{
-    color:var(--muted);
-    font-size:clamp(.65rem,.85vw,.95rem);
-    text-align:center;
-    padding-top:.4em;
-  }
+  /* bulleted community lists */
+  .bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(4px,.9vh,12px);}
+  .bullets li{font-size:clamp(1rem,1.5vw,1.6rem);line-height:1.35;padding-inline-start:1em;position:relative;}
+  .bullets li::before{content:"•";color:var(--gold);position:absolute;inset-inline-start:0;}
+  .dvar{font-family:var(--serif);font-size:clamp(1.15rem,2vw,2.1rem);line-height:1.5;text-align:center;}
+  .dvar .src{display:block;color:var(--muted);font-size:.6em;margin-top:.6em;}
 
-  /* ---------- Bottom strip: shiurim + announcements ---------- */
-  .strip{
-    display:flex;
-    align-items:center;
-    gap:clamp(14px,2vw,34px);
-    flex-wrap:wrap;
-    padding:clamp(10px,1.4vh,18px) clamp(16px,1.8vw,30px);
-    background:linear-gradient(180deg,var(--panel-2),var(--panel));
-    border:1px solid var(--line);
-    border-radius:16px;
-    box-shadow:0 14px 34px rgba(0,0,0,.25);
-  }
-  .strip[hidden]{display:none;}
-  .strip-block{display:flex;align-items:center;gap:clamp(8px,1vw,16px);min-width:0;}
-  .strip-block[hidden]{display:none;}
-  .strip-title{
-    font-family:var(--serif);
-    font-weight:900;
-    color:var(--gold);
-    font-size:clamp(1rem,1.7vw,1.6rem);
-    white-space:nowrap;
-  }
-  .strip-ann{
-    flex:1;
-    min-width:200px;
-    border-inline-start:1px solid var(--line);
-    padding-inline-start:clamp(14px,2vw,28px);
-  }
-  .strip-ann .strip-title{color:var(--shabbat);}
-  .chips{display:flex;gap:clamp(8px,1vw,14px);flex-wrap:wrap;}
-  .chip{
-    display:inline-flex;align-items:baseline;gap:.5em;
-    background:var(--gold-soft);
-    border:1px solid var(--line-strong);
-    border-radius:999px;
-    padding:.3em .95em;
-    font-size:clamp(.9rem,1.35vw,1.4rem);
-    font-weight:500;
-    white-space:nowrap;
-  }
-  .chip .c-time{font-weight:800;color:var(--gold-bright);font-variant-numeric:tabular-nums;direction:ltr;}
-  .chip .c-day{color:var(--muted);font-size:.78em;}
-  .ann-text{font-size:clamp(.95rem,1.5vw,1.5rem);font-weight:500;color:var(--ink);}
+  /* bottom rotating message */
+  .ticker{grid-column:1 / -1;text-align:center;color:var(--muted);font-family:var(--serif);
+    font-size:clamp(.85rem,1.4vw,1.5rem);padding-top:.2em;border-top:1px solid var(--line);}
+  .ticker b{color:var(--gold);font-weight:700;}
 
   @media (max-width:820px){
-    .board{height:auto;min-height:100%;}
-    header{grid-template-columns:1fr;justify-items:center;text-align:center;gap:10px;}
+    header{grid-template-columns:1fr;justify-items:center;text-align:center;gap:8px;}
     .dates{justify-self:center;text-align:center;}
-    .greg-date{text-align:center;}
-    .cols{grid-template-columns:1fr;}
+    .grid-3,.grid-shabbat,.grid-comm{grid-template-columns:1fr;grid-auto-rows:minmax(0,auto);}
   }
 </style>
 
 <!-- =====================================================================
-     ⚙️  הגדרות — ערוך רק את הבלוק הזה. Edit ONLY this CONFIG block.
+     ⚙️  הגדרות — ערוך רק את הבלוק הזה.  Edit ONLY this CONFIG block.
      ===================================================================== -->
 <script>
 const CONFIG = {
-  // ── פרטי בית הכנסת / Shul details ──
-  shulName:  "בית הכנסת ניצוץ הקדושה",          // ← שם בית הכנסת שלך
-  shulSub:   "לוח זמני התפילה ושיעורים",     // כתובית קטנה
+  // ── בית הכנסת / Shul ──
+  shulName: "בית הכנסת ניצוץ הקדושה",
+  shulSub:  "לוח זמני התפילה ושיעורים",
 
-  // ── מיקום מדויק / Exact location (fill in your coordinates) ──
+  // ── מיקום / Location ──
   locationName: "מודיעין",
-  latitude:  31.88503,  // ← קו רוחב  (decimal degrees)
-  longitude: 35.00979,  // ← קו אורך
-  elevation: 275,       // ← גובה במטרים (meters; affects sunrise/sunset)
-  timeZone:  "Asia/Jerusalem",
+  latitude: 31.88503, longitude: 35.00979, elevation: 275,
+  timeZone: "Asia/Jerusalem",
 
   // ── כיוונונים / Tuning ──
-  candleOffsetMinutes: 20,  // הדלקת נרות = שקיעה פחות X דקות
-  motzaeiMethod: "tzais72", // "tzais" (רגיל) או "tzais72" (72 דק' / רבנו תם קירוב)
+  candleOffsetMinutes: 20,     // הדלקת נרות = שקיעה פחות X דק'
+  overscanPercent: 3,          // שוליים נגד חיתוך קצוות ב-TV. 0 אם ה-TV מוגדר "Just Scan".
+  autoReloadMinutes: 30,       // טעינת העמוד מחדש לקליטת עריכות. 0 = כבוי.
+  reduceCountdownUnder: 120,   // הצג "בעוד X דק'" רק כשנשאר פחות מכך
 
-  // כל כמה דקות הלוח יטען מחדש מהאתר כדי לקלוט עריכות. 0 = כבוי.
-  // How often (minutes) the board reloads itself to pick up remote edits. 0 = off.
-  autoReloadMinutes: 3,
-
-  // כל כמה שניות מתחלפים שני המסכים (זמני יום/תפילה  ↔  שבת). 0 = ללא החלפה.
-  // How many seconds each screen is shown before flipping (weekday ↔ Shabbat). 0 = don't rotate.
-  viewRotateSeconds: 20,
-
-  // שוליים נגד חיתוך קצוות בטלוויזיה (overscan). הגדל אם קצה הלוח נחתך; 0 אם ה-TV מוגדר "Just Scan".
-  // Safe-area margin (%) so the TV's overscan can't crop the board edges. Raise if edges are cut; 0 if the TV is set to "Just Scan".
-  overscanPercent: 3,
-
-  // קישור ל-CSV שפורסם מגוגל שיטס (הדלקת נרות/שקיעה/מוצ"ש/פרשה לפי התאריך העברי).
-  // Published Google-Sheets CSV. Rows matched to the coming Shabbat by Hebrew date.
-  // "" = disabled (use computed values only).
+  // ── קישור ל-CSV (הדלקת נרות/שקיעה/מוצ"ש/פרשה לפי תאריך עברי) ──
   timesSheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=1809717429&single=true&output=csv",
 
-  // ── זמני המניין הקבועים / Fixed minyan times ──
-  // ערוך חופשי. השאר "" כדי להסתיר שורה. Add/remove rows freely.
-  minyanim: {
-    weekday: [
-      { name: "שחרית חול המועד (הודו)",        time: "08:00" },
-      { name: "מנחה וערבית צמודים",         time: "18:15" },
-    ],
-    shabbat: [
-       { name: "מנחה ער\"ש",   time: "18:06" },
-      { name: "שיעור",    time: "06:30" },
-      { name: "שחרית שבת",    time: "08:00" },
-      { name: "קידוש קהילתי + הקפות",    time: "11:00" },
-      { name: "סעודה קהילתית",    time: "13:00" },
-      { name: "מנחה גדולה",    time: "14:00" },
-      { name: "שיעור",    time: "08:00" },
-      { name: "מנחה שבת",     time: "17:30" },
-      { name: "סעודה שלישית",    time: "18:00" },
-      { name: "עברית צאת שבת",    time: "18:55" },
-      { name: "הקפות שניות",    time: "21:00" },
-    ],
-  },
-
-  // ── עקיפת / הסתרת זמן מחושב / Override or hide a COMPUTED zman ──
-  // המפתח (key) → "HH:mm" מציג שעה קבועה במקום המחושבת;  key → false מסתיר את השורה.
-  // מפתחות אפשריים: alos, netz, shmaMGA, shmaGRA, tfilaGRA, chatzos,
-  //                 minchaGedola, minchaKetana, plag, shkia, tzais
-  zmanimOverrides: {
-    shmaGRA: false,       // הסתר סוף זמן ק"ש (הגר"א)
-    tfilaGRA: false,      // הסתר סוף זמן תפילה
-    minchaGedola: false,  // הסתר מנחה גדולה
-    minchaKetana: false,  // הסתר מנחה קטנה
-    plag: false,          // הסתר פלג המנחה
-  },
-
-  // ── שורות נוספות בעמודת "זמני היום" / Extra custom rows in the day column ──
-  extraDayRows: [
-    // { name: "זמן טלית ותפילין", time: "05:55" },
+  // ── תפילות חול / Weekday prayers (time "HH:MM" או טקסט חופשי כמו "לאחר מנחה") ──
+  tefillot: [
+    { name: "שחרית",  time: "07:30" },
+    { name: "מנחה",   time: "18:15" },
+    { name: "ערבית",  time: "לאחר מנחה" },
   ],
 
-  // ── שיעורים / Shiurim (רצועה תחתונה) ──
-  // day = טקסט חופשי (למשל "כל יום", "א׳-ה׳", "מוצ״ש"). השאר "" אם לא רלוונטי.
+  // ── שיעורים / Shiurim ──
   shiurim: [
-    // { name: "דף יומי",     time: "05:45", day: "כל יום" },
-    // { name: "הלכה יומית",  time: "13:15", day: "א׳-ה׳" },
-    // { name: "פרשת שבוע",   time: "20:30", day: "יום ה׳" },
+    { name: "דף יומי",     time: "19:30", day: "כל יום" },
+    { name: "הלכה יומית",  time: "",      day: "לאחר ערבית" },
+    // { name: "פרשת שבוע", time: "20:00", day: "יום ה׳" },
   ],
 
-  // ── הודעות / Announcements (טקסט חופשי, רצועה תחתונה) ──
+  // ── לוח שבת (מחולק לפי חלקי היום) / Shabbat schedule by part of day ──
+  // הדלקת נרות / שקיעה / מוצאי ש"ק / ר"ת מתווספים אוטומטית מהגיליון/החישוב.
+  shabbat: {
+    erev:      [ { name: "מנחה וקבלת שבת", time: "18:06" },
+                 { name: "שיעור",          time: "19:15" } ],
+    morning:   [ { name: "שחרית",            time: "08:00" },
+                 { name: "קידוש קהילתי + הקפות", time: "11:00" },
+                 { name: "סעודה קהילתית",    time: "13:00" } ],
+    afternoon: [ { name: "מנחה",           time: "17:30" },
+                 { name: "סעודה שלישית",    time: "18:00" },
+                 { name: "ערבית וצאת שבת",  time: "18:55" },
+                 { name: "הקפות שניות",     time: "21:00" } ],
+  },
+
+  // ── קהילה / Community (placeholders — ערוך חופשי) ──
   announcements: [
-    // "השבת קידוש לרגל הבר מצווה — הציבור מוזמן",
-    // "שיעור הרב מבוטל השבוע",
+    "שיעור הלכה לאחר תפילת ערבית",
+    "כל הציבור מוזמן",
   ],
+  mazalTov: [
+    // "מזל טוב למשפחת כהן לרגל הולדת הנכד",
+  ],
+  dvarTorah: {
+    text: "\"כל מה שאדם צריך לברך ולהודות על כל הטוב אשר נתן לו הקב\"ה\"",
+    source: "",
+  },
+  communityEvents: [
+    // "אסיפת קהילה ביום שני",
+  ],
+
+  // ── מזג אוויר (כבוי כברירת מחדל — אין חיבור חיצוני) ──
+  weather: { enabled: false, city: "מודיעין", text: "" },
+
+  // ── הודעה מתחלפת בתחתית מסך "היום" ──
+  tickerMessages: [
+    "\"טוב ה' לכל ורחמיו על כל מעשיו\"",
+  ],
+
+  // ── עקיפת/הסתרת זמן מחושב ── keys: alos,netz,shmaMGA,shmaGRA,tfilaGRA,chatzos,minchaGedola,minchaKetana,plag,shkia,tzais
+  zmanimOverrides: { shmaGRA:false, tfilaGRA:false, minchaGedola:false, minchaKetana:false, plag:false },
+  extraDayRows: [],
+
+  // ── סבב מסכים תלוי-יום/שעה / Context-aware rotation ──
+  // כל פריט: { screen, sec }.  screens: today | tefillot | shabbat | community
+  screenRotationConfig: {
+    weekday: [ { screen:"today", sec:22 }, { screen:"tefillot", sec:22 }, { screen:"community", sec:16 } ],
+    friday:  [ { screen:"today", sec:20 }, { screen:"shabbat",  sec:26 }, { screen:"community", sec:16 } ],
+    shabbat: [ { screen:"shabbat", sec:30 }, { screen:"community", sec:16 }, { screen:"today", sec:16 } ],
+  },
+  fridayFromHour: 12,   // מאיזו שעה ביום ו' עוברים למצב "ערב שבת"
 };
 </script>
 </head>
@@ -472,15 +253,11 @@ const CONFIG = {
       <img class="brand-logo" alt="" src="logo.jpg">
       <div class="brand-text">
         <div class="shul-name" id="shulName">בית הכנסת</div>
-        <div class="shul-sub" id="shulSub">לוח זמני התפילה</div>
+        <div class="shul-sub" id="shulSub"></div>
       </div>
     </div>
     <div class="center">
-      <div class="clock-wrap">
-        <span class="dash"></span>
-        <div class="clock" id="clock">--:--</div>
-        <span class="dash"></span>
-      </div>
+      <div class="clock-wrap"><span class="dash"></span><div class="clock" id="clock">--:--</div><span class="dash"></span></div>
       <div class="tagline">זמן לתפילה · זמן לחיים טובים יותר</div>
     </div>
     <div class="dates">
@@ -490,59 +267,87 @@ const CONFIG = {
   </header>
 
   <div class="ribbon">
-    <svg class="orn" viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12 H30 M30 12 q4 -7 8 -9 q-2 5 -8 9 q6 4 8 9 q-4 -2 -8 -9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <svg class="orn" viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12H30M30 12q4-7 8-9q-2 5-8 9q6 4 8 9q-4-2-8-9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
     <span class="lead">פרשת השבוע</span>
     <span class="parsha" id="parsha">—</span>
     <span class="tag" id="specialDay" hidden></span>
-    <svg class="orn orn-flip" viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12 H30 M30 12 q4 -7 8 -9 q-2 5 -8 9 q6 4 8 9 q-4 -2 -8 -9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    <svg class="orn orn-flip" viewBox="0 0 40 24" aria-hidden="true"><path d="M2 12H30M30 12q4-7 8-9q-2 5-8 9q6 4 8 9q-4-2-8-9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
   </div>
 
-  <div class="views">
-    <!-- ── מסך א׳: זמני היום + זמני התפילה ── -->
-    <div class="view" id="viewWeekday">
-      <div class="cols cols-2">
-        <!-- זמני התפילה הקבועים -->
-        <section class="panel panel--minyan">
-          <div class="panel-head">
-            <span class="panel-titles"><span class="panel-title">זמני התפילה</span><span class="panel-note">ימות החול</span></span>
-            <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5.5C10 4 6.2 4 4 5V19c2.2-1 6-1 8 .5 2-1.5 5.8-1.5 8-.5V5c-2.2-1-6-1-8 .5Zm0 0V19.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linjoin="round"/></svg></span>
-          </div>
-          <div class="rows" id="minyanRows"></div>
-        </section>
-
-        <!-- זמני היום -->
-        <section class="panel panel--zmanim">
-          <div class="panel-head">
-            <span class="panel-titles"><span class="panel-title">זמני היום</span><span class="panel-note" id="zmanimNote"></span></span>
-            <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2.5V4.8"/><path d="M12 19.2V21.5"/><path d="M2.5 12H4.8"/><path d="M19.2 12H21.5"/><path d="M5.2 5.2 6.8 6.8"/><path d="M17.2 17.2 18.8 18.8"/><path d="M18.8 5.2 17.2 6.8"/><path d="M6.8 17.2 5.2 18.8"/></g></svg></span>
-          </div>
-          <div class="rows" id="zmanimRows"></div>
-        </section>
-      </div>
-    </div>
-
-    <!-- ── מסך ב׳: שבת / יום טוב ── -->
-    <div class="view" id="viewShabbat" hidden>
-      <section class="panel panel--shabbat" id="eventPanel">
-        <div class="panel-head">
-          <span class="panel-titles"><span class="panel-title" id="shabbatTitle">שבת קודש</span><span class="panel-note" id="shabbatNote"></span></span>
-          <span class="panel-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 9V19.5"/><path d="M15 9V19.5"/><path d="M6 19.5H18"/></g><path d="M9 8.5c-1.2-1.4 0-2.9 0-3.9 0 1 1.2 2.5 0 3.9Z" fill="currentColor"/><path d="M15 8.5c-1.2-1.4 0-2.9 0-3.9 0 1 1.2 2.5 0 3.9Z" fill="currentColor"/></svg></span>
+  <div class="stage">
+    <!-- ===== Screen 1: TODAY / NOW ===== -->
+    <section class="screen grid-3" id="screen-today">
+      <div class="card card--gold next-card" id="nextPrayer"></div>
+      <div class="card">
+        <div class="card-head">
+          <span class="card-title">זמני היום</span>
+          <span class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2.5V4.8"/><path d="M12 19.2V21.5"/><path d="M2.5 12H4.8"/><path d="M19.2 12H21.5"/><path d="M5.2 5.2 6.8 6.8"/><path d="M17.2 17.2 18.8 18.8"/><path d="M18.8 5.2 17.2 6.8"/><path d="M6.8 17.2 5.2 18.8"/></g></svg></span>
         </div>
-        <div class="rows rows--two" id="shabbatRows"></div>
-      </section>
-    </div>
-  </div>
+        <div class="rows" id="todayZmanim"></div>
+      </div>
+      <div class="card card--ivory" id="nextShiurCard">
+        <div class="card-head"><span class="card-title">השיעור הבא</span>
+          <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 5.5C10 4 6.2 4 4 5V19c2.2-1 6-1 8 .5 2-1.5 5.8-1.5 8-.5V5c-2.2-1-6-1-8 .5Zm0 0V19.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></div>
+        <div class="rows" id="nextShiur"></div>
+      </div>
+      <div class="ticker" id="ticker"></div>
+    </section>
 
-  <footer class="strip" id="strip" hidden>
-    <div class="strip-block" id="shiurimBlock" hidden>
-      <span class="strip-title">שיעורים</span>
-      <div class="chips" id="shiurimChips"></div>
-    </div>
-    <div class="strip-block strip-ann" id="annBlock" hidden>
-      <span class="strip-title">הודעות</span>
-      <span class="ann-text" id="annText"></span>
-    </div>
-  </footer>
+    <!-- ===== Screen 2: TEFILLOT & SHIURIM ===== -->
+    <section class="screen grid-3" id="screen-tefillot">
+      <div class="card">
+        <div class="card-head"><span class="card-title">תפילות היום</span>
+          <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 3v8m0 0c-3 0-5 2-5 5v2h10v-2c0-3-2-5-5-5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span></div>
+        <div class="rows" id="tefRows"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">שיעורים</span>
+          <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 5.5C10 4 6.2 4 4 5V19c2.2-1 6-1 8 .5 2-1.5 5.8-1.5 8-.5V5c-2.2-1-6-1-8 .5Zm0 0V19.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></div>
+        <div class="rows" id="shiurRows"></div>
+      </div>
+      <div class="card card--ivory">
+        <div class="card-head"><span class="card-title">דבר תורה</span></div>
+        <div class="dvar" id="tefDvar"></div>
+      </div>
+      <div class="card full">
+        <div class="card-head"><span class="card-title">הודעות</span>
+          <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 11l14-6v14L4 13Zm0 0v4m4-2v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span></div>
+        <ul class="bullets" id="tefAnnounce"></ul>
+      </div>
+    </section>
+
+    <!-- ===== Screen 3: SHABBAT KODESH ===== -->
+    <section class="screen grid-shabbat panel--shabbat" id="screen-shabbat">
+      <div class="card card--gold next-card" id="shabbatNext"></div>
+      <div class="card">
+        <div class="card-head"><span class="card-title" id="secErevTitle">ערב שבת</span></div>
+        <div class="rows" id="shErev"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">שבת בבוקר</span></div>
+        <div class="rows" id="shMorning"></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">שבת אחר הצהריים</span></div>
+        <div class="rows" id="shAfternoon"></div>
+      </div>
+    </section>
+
+    <!-- ===== Screen 4: COMMUNITY / TORAH ===== -->
+    <section class="screen grid-comm" id="screen-community">
+      <div class="card">
+        <div class="card-head"><span class="card-title">הודעות</span>
+          <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 11l14-6v14L4 13Zm0 0v4m4-2v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span></div>
+        <ul class="bullets" id="commAnnounce"></ul>
+        <div class="card-head" style="margin-top:auto"><span class="card-title">מזל טוב</span></div>
+        <ul class="bullets" id="commMazal"></ul>
+      </div>
+      <div class="card card--ivory">
+        <div class="card-head"><span class="card-title">דבר תורה</span></div>
+        <div class="dvar" id="commDvar"></div>
+      </div>
+    </section>
+  </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/kosher-zmanim@0.9.0/dist/kosher-zmanim.min.js"></script>
@@ -551,354 +356,262 @@ const CONFIG = {
   const KZ = window.KosherZmanim;
   const $ = id => document.getElementById(id);
 
-  // ---- static text from config ----
   $("shulName").textContent = CONFIG.shulName;
   $("shulSub").textContent  = CONFIG.shulSub;
+  document.documentElement.style.setProperty("--overscan", (Number(CONFIG.overscanPercent)||0)+"%");
 
-  // ---- date helpers (tolerate Luxon | Temporal | Date) ----
-  function toDate(x){
-    if(!x) return null;
-    if(x instanceof Date) return x;
-    if(typeof x.toJSDate === "function") return x.toJSDate();            // Luxon
-    if(typeof x.epochMilliseconds === "number") return new Date(x.epochMilliseconds); // Temporal
-    if(typeof x.toMillis === "function") return new Date(x.toMillis());
-    const d = new Date(x); return isNaN(d) ? null : d;
-  }
-  function plainDate(d){
-    const T = KZ.Temporal;
-    if(T && T.PlainDate) return T.PlainDate.from({year:d.getFullYear(),month:d.getMonth()+1,day:d.getDate()});
-    return d; // Luxon/Date backends accept a JS Date
-  }
-  const fmtTime = d => d
-    ? new Intl.DateTimeFormat("he-IL",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:CONFIG.timeZone}).format(d)
-    : "—";
+  /* ---------- date helpers ---------- */
+  function toDate(x){ if(!x) return null; if(x instanceof Date) return x;
+    if(typeof x.toJSDate==="function") return x.toJSDate();
+    if(typeof x.epochMilliseconds==="number") return new Date(x.epochMilliseconds);
+    const d=new Date(x); return isNaN(d)?null:d; }
+  function plainDate(d){ const T=KZ.Temporal;
+    return (T&&T.PlainDate)?T.PlainDate.from({year:d.getFullYear(),month:d.getMonth()+1,day:d.getDate()}):d; }
+  const fmtTime = d => d ? new Intl.DateTimeFormat("he-IL",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:CONFIG.timeZone}).format(d) : "—";
 
-  // ---- build calendar for a given JS date ----
   function calFor(d){
-    const geo = new KZ.GeoLocation(CONFIG.locationName, CONFIG.latitude, CONFIG.longitude, CONFIG.elevation, CONFIG.timeZone);
-    const c = new KZ.ComplexZmanimCalendar(geo);
-    try { c.setUseElevation(false); } catch(_){}   // sea-level zmanim, matching the Siddur app
-    try { c.setDate(plainDate(d)); } catch(e){ try{ c.setDate(d); }catch(_){} }
+    const geo=new KZ.GeoLocation(CONFIG.locationName,CONFIG.latitude,CONFIG.longitude,CONFIG.elevation,CONFIG.timeZone);
+    const c=new KZ.ComplexZmanimCalendar(geo);
+    try{ c.setUseElevation(false); }catch(_){}
+    try{ c.setDate(plainDate(d)); }catch(e){ try{c.setDate(d);}catch(_){} }
     return c;
   }
-  function jewishCalFor(d){
-    let jc;
-    try { jc = new KZ.JewishCalendar(plainDate(d)); }
-    catch(e){ try { jc = new KZ.JewishCalendar(d); } catch(_){ jc = new KZ.JewishCalendar(); } }
-    try { jc.setInIsrael(true); } catch(_){}   // Israel parsha/yom-tov schedule
-    return jc;
-  }
+  function jewishCalFor(d){ let jc; try{jc=new KZ.JewishCalendar(plainDate(d));}catch(e){try{jc=new KZ.JewishCalendar(d);}catch(_){jc=new KZ.JewishCalendar();}}
+    try{jc.setInIsrael(true);}catch(_){} return jc; }
+  const safe = fn => { try{ return toDate(fn()); }catch(e){ return null; } };
 
-  function safe(fn){ try{ return toDate(fn()); }catch(e){ return null; } }
-
-  // ---- times sheet (published Google-Sheets CSV, matched by Hebrew date) ----
-  let SHEET = null; // Map: normalized Hebrew day+month -> row object
+  /* ---------- times sheet ---------- */
+  let SHEET=null;
   const hebNorm = s => (s||"").replace(/[^א-ת]/g,"");
-  function hebKeyFor(d){
-    try{
-      const hdf = new KZ.HebrewDateFormatter(); hdf.setHebrewFormat(true);
-      const t = hdf.format(jewishCalFor(d)).trim().split(/\s+/);
-      t.pop();                       // drop the year token, keep day + month
-      return hebNorm(t.join(""));
-    }catch(e){ return ""; }
-  }
-  function parseCSV(txt){
-    const rows=[]; let f=[], cur="", q=false;
+  function hebKeyFor(d){ try{ const hdf=new KZ.HebrewDateFormatter(); hdf.setHebrewFormat(true);
+    const t=hdf.format(jewishCalFor(d)).trim().split(/\s+/); t.pop(); return hebNorm(t.join("")); }catch(e){ return ""; } }
+  function parseCSV(txt){ const rows=[]; let f=[],cur="",q=false;
     for(let i=0;i<txt.length;i++){ const c=txt[i];
       if(q){ if(c=='"'){ if(txt[i+1]=='"'){cur+='"';i++;} else q=false; } else cur+=c; }
-      else { if(c=='"') q=true;
-        else if(c==',') { f.push(cur); cur=""; }
-        else if(c=='\n'||c=='\r') { if(c=='\r'&&txt[i+1]=='\n') i++; f.push(cur); rows.push(f); f=[]; cur=""; }
-        else cur+=c; } }
-    if(cur.length||f.length){ f.push(cur); rows.push(f); }
-    return rows;
-  }
+      else { if(c=='"')q=true; else if(c==','){f.push(cur);cur="";}
+        else if(c=='\n'||c=='\r'){ if(c=='\r'&&txt[i+1]=='\n')i++; f.push(cur); rows.push(f); f=[]; cur=""; } else cur+=c; } }
+    if(cur.length||f.length){ f.push(cur); rows.push(f); } return rows; }
   async function loadSheet(){
-    const url = CONFIG.timesSheetCsvUrl;
-    if(!url){ SHEET = null; return; }
-    try{
-      const bust = (url.indexOf("?") >= 0 ? "&" : "?") + "_=" + Date.now();  // defeat webview cache
-      const rows = parseCSV(await (await fetch(url + bust, {cache:"no-store"})).text());
-      const m = new Map();
-      // cols: 0 name,1 greg(unreliable),2 hebrew,3 candle,4 minchaErevShabbat,
-      //       5 shkia,6 sofKS,7 shiur,8 minchaShabbat,9 motzaei,10 R"T(ignored)
-      rows.slice(1).forEach(r => {
-        const key = hebNorm(r[2]);
-        if(!key) return;
-        m.set(key, {
-          name:(r[0]||"").trim(), candle:(r[3]||"").trim(), shkia:(r[5]||"").trim(),
-          motzaei:(r[9]||"").trim(), minchaES:(r[4]||"").trim(),
-          sofKS:(r[6]||"").trim(), shiur:(r[7]||"").trim(), minchaShabbat:(r[8]||"").trim(),
-        });
-      });
-      SHEET = m.size ? m : null;
-    }catch(e){ SHEET = null; }        // offline / blocked / bad data → computed fallback
+    const url=CONFIG.timesSheetCsvUrl; if(!url){ SHEET=null; return; }
+    try{ const bust=(url.indexOf("?")>=0?"&":"?")+"_="+Date.now();
+      const rows=parseCSV(await (await fetch(url+bust,{cache:"no-store"})).text()); const m=new Map();
+      rows.slice(1).forEach(r=>{ const k=hebNorm(r[2]); if(!k) return;
+        m.set(k,{ name:(r[0]||"").trim(), candle:(r[3]||"").trim(), shkia:(r[5]||"").trim(), motzaei:(r[9]||"").trim() }); });
+      SHEET=m.size?m:null;
+    }catch(e){ SHEET=null; }
   }
-  function sheetRowForShabbat(now){
-    return SHEET ? (SHEET.get(hebKeyFor(nextDow(now,6))) || null) : null;
-  }
-  // nearest upcoming sheet event from today (Shabbat OR a weekday Yom Tov), inclusive
-  function nextEvent(now){
-    if(!SHEET) return null;
-    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    for(let i=0;i<40;i++){
-      const d = new Date(start); d.setDate(start.getDate()+i);
-      const row = SHEET.get(hebKeyFor(d));
-      if(row) return { date:d, row, isShabbat:d.getDay()===6 };
-    }
-    return null;
-  }
+  function nextDow(base,dow){ const d=new Date(base.getFullYear(),base.getMonth(),base.getDate());
+    d.setDate(d.getDate()+((dow-d.getDay()+7)%7)); return d; }
+  function nextEventRow(now){ if(!SHEET) return null;
+    const s=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    for(let i=0;i<40;i++){ const d=new Date(s); d.setDate(s.getDate()+i);
+      const row=SHEET.get(hebKeyFor(d)); if(row) return {date:d,row,isShabbat:d.getDay()===6}; }
+    return null; }
 
-  // ---- rows renderer ----
-  function renderRows(container, items){
-    container.innerHTML = "";
-    items.filter(it => it && it.val).forEach(it => {
-      const row = document.createElement("div");
-      row.className = "row" + (it.big ? " row--big" : "");
-      row.innerHTML =
-        `<span class="name">${it.name}${it.hint?`<span class="hint">${it.hint}</span>`:""}</span>`+
-        `<span class="val">${it.val}</span>`;
-      container.appendChild(row);
-    });
-  }
+  /* ---------- time / event utilities ---------- */
+  function toToday(now,hhmm){ const m=/^(\d{1,2}):(\d{2})$/.exec((hhmm||"").trim()); if(!m) return null;
+    return new Date(now.getFullYear(),now.getMonth(),now.getDate(),+m[1],+m[2],0); }
+  function countdownText(t,now){ if(!t) return ""; const diff=t-now; if(diff<0) return "";
+    const mins=Math.round(diff/60000); if(mins<1) return "מתחילה כעת";
+    if(mins>(Number(CONFIG.reduceCountdownUnder)||120)) return "";
+    if(mins<60) return "מתחילה בעוד "+mins+" דקות";
+    return "מתחילה בעוד "+Math.floor(mins/60)+" שע׳ "+(mins%60)+" דק׳"; }
+  function nextUpcoming(now,list){ let best=null;
+    (list||[]).forEach(it=>{ const t=toToday(now,it.time); if(t&&t>=now&&(!best||t<best.t)) best={name:it.name,time:it.time,t,day:it.day}; });
+    return best; }
 
-  // shrink ONLY the columns that overflow, each independently (others stay full size)
-  function fitAll(){
-    ["minyanRows","zmanimRows","shabbatRows"].forEach(id => {
-      const el = $(id); if(!el) return;
-      el.style.setProperty("--rs", "1");
-      if(el.clientHeight === 0) return;        // hidden view — nothing to fit
-      let rs = 1, guard = 0;
-      while(el.scrollHeight > el.clientHeight + 1 && rs > 0.45 && guard < 25){
-        rs -= 0.05; el.style.setProperty("--rs", rs.toFixed(2)); guard++;
-      }
-    });
+  /* ---------- rows renderer + auto-fit ---------- */
+  function renderRows(el,items){ if(!el) return; el.innerHTML="";
+    (items||[]).filter(it=>it&&(it.val||it.val==="")).forEach(it=>{
+      const row=document.createElement("div");
+      row.className="row"+(it.big?" row--big":"")+(it.past?" past":"");
+      row.innerHTML=`<span class="name">${it.name}${it.hint?`<span class="hint">${it.hint}</span>`:""}</span><span class="val">${it.val||""}</span>`;
+      el.appendChild(row); }); }
+  function fitList(el){ if(!el) return; el.style.setProperty("--rs","1"); if(el.clientHeight===0) return;
+    let rs=1,g=0; while(el.scrollHeight>el.clientHeight+1&&rs>0.45&&g<25){ rs-=0.05; el.style.setProperty("--rs",rs.toFixed(2)); g++; } }
+  function fitActive(){ const s=document.querySelector(".screen.active"); if(!s) return;
+    s.querySelectorAll(".rows").forEach(fitList); }
+
+  /* ---------- header (shared) ---------- */
+  function renderHeader(now){
+    $("clock").textContent=new Intl.DateTimeFormat("he-IL",{hour:"2-digit",minute:"2-digit",hour12:false,timeZone:CONFIG.timeZone}).format(now);
+    $("gregDate").textContent=new Intl.DateTimeFormat("he-IL",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:CONFIG.timeZone}).format(now);
+    try{ const hdf=new KZ.HebrewDateFormatter(); hdf.setHebrewFormat(true);
+      $("hebrewDate").textContent=hdf.format(jewishCalFor(now));
+      const row=nextEventRow(now);
+      const p=(row&&row.name)?row.name:hdf.formatParsha(jewishCalFor(nextDow(now,6)));
+      $("parsha").textContent=p&&p.length?p:"—";
+      let special=""; try{ if(typeof (jewishCalFor(now)).isRoshChodesh==="function"&&jewishCalFor(now).isRoshChodesh()) special="ראש חודש";
+        const yt=hdf.formatYomTov?hdf.formatYomTov(jewishCalFor(now)):""; if(yt) special=yt; }catch(e){}
+      const el=$("specialDay"); if(special){el.textContent=special;el.hidden=false;} else el.hidden=true;
+    }catch(e){ $("hebrewDate").textContent="—"; }
   }
 
-  // ---- fixed minyan times (weekday) ----
-  function renderMinyan(){
-    renderRows($("minyanRows"),
-      (CONFIG.minyanim.weekday||[]).map(m => ({name:m.name, val:m.time, big:true})));
-  }
-
-  // ---- daily zmanim ----
-  function renderZmanim(now){
-    const c = calFor(now);   // sea-level (isUseElevation=false), Siddur opinions below
-
-    // derived values that aren't single library calls (match ZmanimService.kt)
-    const chatz = safe(()=>c.getChatzos());
-    const seaSunset = safe(()=>c.getSeaLevelSunset());
-    const tzeis23 = seaSunset ? new Date(seaSunset.getTime() + 23*60000) : null;   // 3 stars, Israeli Sephardi
-    let halfGra = null; try { halfGra = c.getShaahZmanisGra()/2; } catch(_){}
-    const mgOffset = (halfGra!=null) ? Math.max(halfGra, 30*60000) : 30*60000;     // stricter of ½ shaah / 30 min
-    const minchaGed = chatz ? new Date(chatz.getTime() + mgOffset) : null;
-
-    const items = [
-      {key:"alos",         name:"עלות השחר",            val:fmtTime(safe(()=>c.getAlos72()))},
-      {key:"netz",         name:"הנץ החמה",             val:fmtTime(safe(()=>c.getSeaLevelSunrise()))},
-      {key:"shmaMGA",      name:'סוף זמן ק"ש',  hint:'מג"א', val:fmtTime(safe(()=>c.getSofZmanShmaMGA72Minutes()))},
-      {key:"shmaGRA",      name:'סוף זמן ק"ש',  hint:'הגר"א',val:fmtTime(safe(()=>c.getSofZmanShmaGRA())), big:true},
-      {key:"tfilaGRA",     name:"סוף זמן תפילה", hint:'הגר"א',val:fmtTime(safe(()=>c.getSofZmanTfilaGRA()))},
-      {key:"chatzos",      name:"חצות היום",           val:fmtTime(chatz)},
-      {key:"minchaGedola", name:"מנחה גדולה",          val:fmtTime(minchaGed)},
-      {key:"minchaKetana", name:"מנחה קטנה",          val:fmtTime(safe(()=>c.getMinchaKetana()))},
-      {key:"plag",         name:"פלג המנחה",          val:fmtTime(safe(()=>c.getPlagHamincha()))},
-      {key:"shkia",        name:"שקיעת החמה",         val:fmtTime(seaSunset)},
-      {key:"tzais",        name:"צאת הכוכבים",        val:fmtTime(tzeis23)},
+  /* ---------- zmanim (Siddur opinions, sea-level) ---------- */
+  function dailyZmanim(now){
+    const c=calFor(now);
+    const chatz=safe(()=>c.getChatzos());
+    const seaSunset=safe(()=>c.getSeaLevelSunset());
+    const tzeis23=seaSunset?new Date(seaSunset.getTime()+23*60000):null;
+    let halfGra=null; try{halfGra=c.getShaahZmanisGra()/2;}catch(_){}
+    const mgOffset=(halfGra!=null)?Math.max(halfGra,30*60000):30*60000;
+    const minchaGed=chatz?new Date(chatz.getTime()+mgOffset):null;
+    const items=[
+      {key:"alos",name:"עלות השחר",val:fmtTime(safe(()=>c.getAlos72()))},
+      {key:"netz",name:"הנץ החמה",val:fmtTime(safe(()=>c.getSeaLevelSunrise()))},
+      {key:"shmaMGA",name:'סוף זמן ק"ש',hint:'מג"א',val:fmtTime(safe(()=>c.getSofZmanShmaMGA72Minutes()))},
+      {key:"shmaGRA",name:'סוף זמן ק"ש',hint:'הגר"א',val:fmtTime(safe(()=>c.getSofZmanShmaGRA()))},
+      {key:"tfilaGRA",name:"סוף זמן תפילה",hint:'הגר"א',val:fmtTime(safe(()=>c.getSofZmanTfilaGRA()))},
+      {key:"chatzos",name:"חצות היום",val:fmtTime(chatz)},
+      {key:"minchaGedola",name:"מנחה גדולה",val:fmtTime(minchaGed)},
+      {key:"minchaKetana",name:"מנחה קטנה",val:fmtTime(safe(()=>c.getMinchaKetana()))},
+      {key:"plag",name:"פלג המנחה",val:fmtTime(safe(()=>c.getPlagHamincha()))},
+      {key:"shkia",name:"שקיעת החמה",val:fmtTime(seaSunset)},
+      {key:"tzais",name:"צאת הכוכבים",val:fmtTime(tzeis23)},
     ];
-
-    // apply per-zman overrides/hides, then append any custom extra rows
-    const ov = CONFIG.zmanimOverrides || {};
-    let out = items
-      .filter(it => ov[it.key] !== false)                       // false → hide row
-      .map(it => (ov[it.key] ? {...it, val: ov[it.key]} : it));  // "HH:mm" → fixed value
-    (CONFIG.extraDayRows || []).forEach(r => {
-      if(r && r.name) out.push({name:r.name, hint:r.hint, val:r.time});
-    });
-
-    renderRows($("zmanimRows"), out);
+    const ov=CONFIG.zmanimOverrides||{};
+    let out=items.filter(it=>ov[it.key]!==false).map(it=>ov[it.key]?{...it,val:ov[it.key]}:it);
+    (CONFIG.extraDayRows||[]).forEach(r=>{ if(r&&r.name) out.push({name:r.name,hint:r.hint,val:r.time}); });
+    return out;
   }
 
-  // ---- bottom strip: shiurim + announcements ----
-  function renderStrip(){
-    const sh  = (CONFIG.shiurim || []).filter(s => s && s.name);
-    const ann = (CONFIG.announcements || []).filter(Boolean);
-
-    const shBlock = $("shiurimBlock"), annBlock = $("annBlock");
-    if(sh.length){
-      $("shiurimChips").innerHTML = sh.map(s =>
-        `<span class="chip"><span class="c-name">${s.name}</span>` +
-        (s.time ? `<span class="c-time">${s.time}</span>` : "") +
-        (s.day  ? `<span class="c-day">${s.day}</span>`   : "") +
-        `</span>`).join("");
-      shBlock.hidden = false;
-    } else shBlock.hidden = true;
-
-    if(ann.length){
-      $("annText").textContent = ann.join("   •   ");
-      annBlock.hidden = false;
-    } else annBlock.hidden = true;
-
-    $("strip").hidden = !(sh.length || ann.length);
+  /* ---------- Shabbat data (sections + candle/motzaei from sheet) ---------- */
+  function shabbatData(now){
+    const ev=nextEventRow(now);
+    const isShabbat=ev?ev.isShabbat:true;
+    const evDate=ev?ev.date:nextDow(now,6);
+    const row=ev?ev.row:null;
+    const eve=new Date(evDate.getFullYear(),evDate.getMonth(),evDate.getDate()-1);
+    const cEve=calFor(eve), cDay=calFor(evDate);
+    let candle=safe(()=>cEve.getSunset()); if(candle) candle=new Date(candle.getTime()-CONFIG.candleOffsetMinutes*60000);
+    const daySunset=safe(()=>cDay.getSunset());
+    const candleVal=(row&&row.candle)?row.candle:fmtTime(candle);
+    const shkiaVal=(row&&row.shkia)?row.shkia:fmtTime(safe(()=>cEve.getSunset()));
+    const motzaeiVal=(row&&row.motzaei)?row.motzaei:(daySunset?fmtTime(new Date(daySunset.getTime()+31*60000)):"—");
+    const rtVal=daySunset?fmtTime(new Date(daySunset.getTime()+72*60000)):"—";
+    const s=CONFIG.shabbat||{};
+    const erev=[...(s.erev||[]),{name:"הדלקת נרות",val:candleVal,big:true},{name:"שקיעה",val:shkiaVal}];
+    const morning=[...(s.morning||[])];
+    const afternoon=[...(s.afternoon||[]),{name:"מוצאי שבת",val:motzaeiVal,big:true},{name:'ר"ת',val:rtVal}];
+    // normalize {name,time}->{name,val}
+    const norm=a=>a.map(x=>x.val!==undefined?x:{name:x.name,val:x.time});
+    return {isShabbat,name:(row&&row.name)?row.name:"",erev:norm(erev),morning:norm(morning),afternoon:norm(afternoon),
+            candle:candleVal,motzaei:motzaeiVal};
   }
 
-  // ---- coming Shabbat ----
-  function nextDow(base, dow){ // dow: 0=Sun..6=Sat
-    const d = new Date(base.getFullYear(), base.getMonth(), base.getDate());
-    d.setDate(d.getDate() + ((dow - d.getDay() + 7) % 7));
-    return d;
-  }
-  function renderShabbat(now){
-    // nearest upcoming event: coming Shabbat, or an earlier weekday Yom Tov
-    const ev = nextEvent(now);
-    const isShabbat = ev ? ev.isShabbat : true;
-    const evDate = ev ? ev.date : nextDow(now, 6);
-    const row = ev ? ev.row : null;
+  /* ---------- render each screen ---------- */
+  function markPast(items,now,active){ if(!active) return items;
+    return items.map(it=>{ const t=toToday(now,(it.val||"").trim()); return (t&&t<now)?{...it,past:true}:it; }); }
 
-    // computed fallbacks, based on the event's own eve/day
-    const eve = new Date(evDate.getFullYear(), evDate.getMonth(), evDate.getDate()-1);
-    const cEve = calFor(eve);
-    const cDay = calFor(evDate);
-    // computed fallback matches the Siddur (sea-level; candle = sunset − 20, motzaei = sunset + 31)
-    let candle = safe(()=>cEve.getSunset());
-    if(candle) candle = new Date(candle.getTime() - CONFIG.candleOffsetMinutes*60000);
-    const daySunset = safe(()=>cDay.getSunset());
-    const motzaei = daySunset ? new Date(daySunset.getTime() + 31*60000) : null;
-    // ר"ת always computed (sheet's ר"ת column is inaccurate): sea-level sunset + 72 min
-    const rt = daySunset ? new Date(daySunset.getTime() + 72*60000) : null;
-
-    const candleVal  = (row && row.candle)  ? row.candle  : fmtTime(candle);
-    const shkiaVal   = (row && row.shkia)   ? row.shkia   : fmtTime(safe(()=>cEve.getSunset()));
-    const motzaeiVal = (row && row.motzaei) ? row.motzaei : fmtTime(motzaei);
-
-    const items = [];
-    if(isShabbat){
-      (CONFIG.minyanim.shabbat||[]).forEach(m => items.push({name:m.name, val:m.time}));
-    }
-    items.push({name:"הדלקת נרות", val:candleVal, big:true});
-    items.push({name:"שקיעה",      val:shkiaVal});
-    items.push({name: isShabbat ? "מוצאי שבת" : "מוצאי החג", val:motzaeiVal, big:true});
-    items.push({name: 'ר"ת', val: fmtTime(rt)});
-    renderRows($("shabbatRows"), items);
-    $("shabbatRows").style.setProperty("--rows-per-col", Math.ceil(items.length / 2));  // balance the 2 columns
-
-    // panel title + subtitle
-    let title, note;
-    if(isShabbat){
-      title = "שבת קודש";
-      if(row && row.name){ note = row.name; }
-      else {
-        try { const hdf = new KZ.HebrewDateFormatter(); hdf.setHebrewFormat(true);
-              const p = hdf.formatParsha(jewishCalFor(evDate)) || ""; note = p ? "פרשת "+p : ""; }
-        catch(e){ note = ""; }
-      }
-    } else {
-      title = (row && row.name) ? row.name : "חג";   // e.g. יום כיפור, חג פסח
-      note  = "";
-    }
-    $("shabbatTitle").textContent = title;
-    $("shabbatNote").textContent  = note || "";
-
-    const panel = $("eventPanel");
-    if(panel){
-      panel.classList.toggle("panel--shabbat", isShabbat);
-      panel.classList.toggle("panel--yomtov", !isShabbat);
-    }
+  function renderToday(now){
+    // next prayer
+    const list=CONFIG.tefillot||[];
+    let np=nextUpcoming(now,list);
+    if(!np){ const first=list.find(x=>/^\d{1,2}:\d{2}$/.test(x.time||"")); np=first?{name:first.name,time:first.time,t:null}:null; }
+    const cd=np&&np.t?countdownText(np.t,now):"";
+    $("nextPrayer").innerHTML = np
+      ? `<div class="ne-label">התפילה הקרובה</div><div class="ne-name">${np.name}</div><div class="ne-time">${np.time||"—"}</div>${cd?`<div class="ne-count">${cd}</div>`:""}`
+      : `<div class="ne-label">התפילה הקרובה</div><div class="ne-name">—</div>`;
+    renderRows($("todayZmanim"),dailyZmanim(now));
+    // next shiur
+    const ns=nextUpcoming(now,(CONFIG.shiurim||[]).filter(s=>/^\d{1,2}:\d{2}$/.test(s.time||"")));
+    const shiur=ns||(CONFIG.shiurim||[])[0];
+    renderRows($("nextShiur"), shiur?[{name:shiur.name,val:shiur.time|| (shiur.day||""),big:true}].concat(shiur.day&&shiur.time?[{name:shiur.day,val:""}]:[]):[]);
+    // ticker
+    const tm=CONFIG.tickerMessages||[]; $("ticker").innerHTML=tm.length?tm[Math.floor(Date.now()/15000)%tm.length]:"";
   }
 
-  // ---- header dates + parsha ----
-  function renderHeaderDates(now){
-    $("clock").textContent = new Intl.DateTimeFormat("he-IL",
-      {hour:"2-digit",minute:"2-digit",hour12:false,timeZone:CONFIG.timeZone}).format(now);
-
-    $("gregDate").textContent = new Intl.DateTimeFormat("he-IL",
-      {weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:CONFIG.timeZone}).format(now);
-
-    try {
-      const jc = jewishCalFor(now);
-      const hdf = new KZ.HebrewDateFormatter();
-      hdf.setHebrewFormat(true);
-      $("hebrewDate").textContent = hdf.format(jc);
-
-      // parsha of the coming Shabbat — prefer the sheet's name, else compute
-      const row = sheetRowForShabbat(now);
-      const p = (row && row.name) ? row.name : hdf.formatParsha(jewishCalFor(nextDow(now,6)));
-      $("parsha").textContent = p && p.length ? p : "—";
-
-      // special day (yom tov / rosh chodesh / fast) if the formatter offers it
-      let special = "";
-      try {
-        if(typeof jc.isRoshChodesh === "function" && jc.isRoshChodesh()) special = "ראש חודש";
-        const yt = hdf.formatYomTov ? hdf.formatYomTov(jc) : "";
-        if(yt) special = yt;
-      } catch(e){}
-      const el = $("specialDay");
-      if(special){ el.textContent = special; el.hidden = false; }
-      else { el.hidden = true; }
-    } catch(e){
-      $("hebrewDate").textContent = "—";
-    }
+  function renderTefillot(now){
+    renderRows($("tefRows"),(CONFIG.tefillot||[]).map(t=>({name:t.name,val:t.time,big:true})));
+    renderRows($("shiurRows"),(CONFIG.shiurim||[]).map(s=>({name:s.name,hint:s.day,val:s.time})));
+    $("tefDvar").innerHTML=CONFIG.dvarTorah?`${CONFIG.dvarTorah.text||""}${CONFIG.dvarTorah.source?`<span class="src">${CONFIG.dvarTorah.source}</span>`:""}`:"";
+    const a=$("tefAnnounce"); a.innerHTML=""; (CONFIG.announcements||[]).forEach(x=>{const li=document.createElement("li");li.textContent=x;a.appendChild(li);});
   }
 
-  // ---- refresh cycles ----
-  async function fullRefresh(){
-    const now = new Date();
-    await loadSheet();
-    renderHeaderDates(now);
-    renderMinyan();
-    renderZmanim(now);
-    renderShabbat(now);
-    renderStrip();
-    $("zmanimNote").textContent = CONFIG.locationName;
-    requestAnimationFrame(fitAll);   // scale rows so nothing is clipped on this screen
-  }
-  function tickClock(){
-    $("clock").textContent = new Intl.DateTimeFormat("he-IL",
-      {hour:"2-digit",minute:"2-digit",hour12:false,timeZone:CONFIG.timeZone}).format(new Date());
-  }
-
-  function scheduleMidnight(){
-    const n = new Date();
-    const next = new Date(n.getFullYear(), n.getMonth(), n.getDate()+1, 0, 0, 30);
-    setTimeout(()=>{ fullRefresh(); scheduleMidnight(); }, next - n);
+  function renderShabbatScreen(now){
+    const d=shabbatData(now);
+    const panel=$("screen-shabbat");
+    panel.classList.toggle("panel--yomtov", !d.isShabbat);
+    panel.classList.toggle("panel--shabbat", d.isShabbat);
+    $("secErevTitle").textContent = d.isShabbat ? "ערב שבת" : (d.name||"החג");
+    const active = (now.getDay()===6);
+    renderRows($("shErev"),markPast(d.erev,now,active));
+    renderRows($("shMorning"),markPast(d.morning,now,active));
+    renderRows($("shAfternoon"),markPast(d.afternoon,now,active));
+    // next event across all shabbat items
+    const all=[...d.erev,...d.morning,...d.afternoon].filter(x=>/^\d{1,2}:\d{2}$/.test((x.val||"").trim()));
+    let ne=null;
+    if(active){ all.forEach(x=>{const t=toToday(now,x.val);if(t&&t>=now&&(!ne||t<ne.t))ne={name:x.name,val:x.val,t};}); }
+    if(!ne) ne=all[0]?{name:all[0].name,val:all[0].val,t:null}:null;
+    const cd=ne&&ne.t?countdownText(ne.t,now):"";
+    $("shabbatNext").innerHTML = ne
+      ? `<div class="ne-label">האירוע הבא</div><div class="ne-name">${ne.name}</div><div class="ne-time">${ne.val}</div>${cd?`<div class="ne-count">${cd}</div>`:""}`
+      : `<div class="ne-label">${d.name||"שבת קודש"}</div>`;
   }
 
-  if(!KZ){
-    $("zmanimRows").innerHTML =
-      '<div class="row"><span class="name">שגיאה בטעינת ספריית הזמנים</span></div>';
-    return;
+  function renderCommunity(now){
+    const fill=(id,arr)=>{ const el=$(id); el.innerHTML=""; (arr||[]).forEach(x=>{const li=document.createElement("li");li.textContent=x;el.appendChild(li);}); };
+    fill("commAnnounce",CONFIG.announcements);
+    fill("commMazal",CONFIG.mazalTov);
+    $("commDvar").innerHTML=CONFIG.dvarTorah?`${CONFIG.dvarTorah.text||""}${CONFIG.dvarTorah.source?`<span class="src">${CONFIG.dvarTorah.source}</span>`:""}`:"";
   }
-  // apply TV overscan-safe margin
-  document.documentElement.style.setProperty("--overscan", (Number(CONFIG.overscanPercent)||0) + "%");
 
-  fullRefresh();
-  if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll);  // re-fit once webfont loads
-  window.addEventListener("resize", () => requestAnimationFrame(fitAll));
-  setInterval(tickClock, 1000*15);
+  const RENDER={ today:renderToday, tefillot:renderTefillot, shabbat:renderShabbatScreen, community:renderCommunity };
+  const SCREEN_EL={ today:"screen-today", tefillot:"screen-tefillot", shabbat:"screen-shabbat", community:"screen-community" };
+
+  function showScreen(name){
+    const now=new Date();
+    (RENDER[name]||function(){})(now);
+    Object.values(SCREEN_EL).forEach(id=>$(id).classList.remove("active"));
+    const el=$(SCREEN_EL[name]); if(el) el.classList.add("active");
+    requestAnimationFrame(()=>{ fitActive(); });
+  }
+
+  /* ---------- context-aware rotation ---------- */
+  function dayType(now){
+    const d=now.getDay(), h=now.getHours()+now.getMinutes()/60;
+    if(d===6) return "shabbat";
+    if(d===5 && h>=(Number(CONFIG.fridayFromHour)||12)) return "friday";
+    return "weekday";
+  }
+  let rotTimer=null, rotIdx=0, curMode=null;
+  function rotate(){
+    const now=new Date(); const mode=dayType(now);
+    const seq=(CONFIG.screenRotationConfig&&CONFIG.screenRotationConfig[mode])||CONFIG.screenRotationConfig.weekday||[{screen:"today",sec:20}];
+    if(mode!==curMode){ curMode=mode; rotIdx=0; }
+    const item=seq[rotIdx%seq.length]; rotIdx++;
+    showScreen(item.screen);
+    clearTimeout(rotTimer); rotTimer=setTimeout(rotate,(item.sec||20)*1000);
+  }
+
+  /* ---------- per-second tick (clock + live countdown on active screen) ---------- */
+  function tick(){
+    const now=new Date(); renderHeader(now);
+    const active=document.querySelector(".screen.active");
+    if(active&&active.id==="screen-today") renderToday(now);
+    else if(active&&active.id==="screen-shabbat") renderShabbatScreen(now);
+    requestAnimationFrame(fitActive);
+  }
+
+  async function fullRefresh(){ await loadSheet(); renderHeader(new Date()); if(curMode) rotate(); }
+
+  function scheduleMidnight(){ const n=new Date(); const next=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1,0,0,30);
+    setTimeout(()=>{ loadSheet().then(()=>{ curMode=null; }); scheduleMidnight(); }, next-n); }
+
+  if(!KZ){ $("todayZmanim").innerHTML='<div class="row"><span class="name">שגיאה בטעינת ספריית הזמנים</span></div>'; return; }
+
+  loadSheet().then(()=>{
+    renderHeader(new Date());
+    rotate();
+    if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fitActive);
+  });
+  setInterval(tick,1000);
+  window.addEventListener("resize",()=>requestAnimationFrame(fitActive));
   scheduleMidnight();
 
-  // alternate between the two screens (weekday times ↔ Shabbat schedule)
-  const viewEls = [$("viewWeekday"), $("viewShabbat")].filter(Boolean);
-  function showView(i){
-    viewEls.forEach((v, k) => { v.hidden = (k !== i); });
-    requestAnimationFrame(fitAll);   // fit the now-visible screen
-  }
-  showView(0);
-  const vs = Number(CONFIG.viewRotateSeconds) || 0;
-  if(vs > 0 && viewEls.length > 1){
-    let vi = 0;
-    setInterval(() => { vi = (vi + 1) % viewEls.length; showView(vi); }, vs * 1000);
-  }
-
-  // reload from the server periodically so remote edits appear on the wall on their own
-  const rm = Number(CONFIG.autoReloadMinutes) || 0;
-  if(rm > 0){
-    setTimeout(() => {
-      // reload to a fresh URL (changing query) so the kiosk webview can't serve a cached page
-      try { location.replace(location.origin + location.pathname + "?v=" + Date.now()); }
-      catch(e){ try { location.reload(); } catch(_){} }
-    }, rm * 60 * 1000);
-  }
+  // periodic reload to pick up remote edits (fresh URL defeats webview cache)
+  const rm=Number(CONFIG.autoReloadMinutes)||0;
+  if(rm>0) setTimeout(()=>{ try{location.replace(location.origin+location.pathname+"?v="+Date.now());}catch(e){try{location.reload();}catch(_){}} }, rm*60*1000);
 })();
 </script>
 </body>
