@@ -75,15 +75,13 @@
   /* ---------------- Stage / screens (crossfade) ---------------- */
   .stage{position:relative;min-height:0;}
   .screen{position:absolute;inset:0;opacity:0;visibility:hidden;transition:opacity .8s ease;pointer-events:none;
-    display:grid;gap:clamp(10px,1.4vw,22px);}
+    display:flex;flex-direction:column;gap:clamp(10px,1.4vw,22px);}
   .screen.active{opacity:1;visibility:visible;}
   @media (prefers-reduced-motion:reduce){ .screen{transition:none;} }
-
-  .grid-3{grid-template-columns:1.05fr 1.25fr 1fr;grid-template-rows:1fr auto;}
-  .grid-3 .full{grid-column:1 / -1;}
-  .grid-shabbat{grid-template-columns:repeat(3,1fr);grid-template-rows:auto 1fr;}
-  .grid-shabbat .next-card{grid-column:1 / -1;}
-  .grid-comm{grid-template-columns:1fr 1fr;}
+  /* a row of cards that share the width; hidden cards collapse and the rest re-fill */
+  .card-row{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:clamp(10px,1.4vw,22px);flex:1;min-height:0;}
+  .screen > .next-card{flex:0 0 auto;}      /* shabbat hero: size to content, list below fills */
+  [hidden]{display:none!important;}
 
   /* ---------------- Cards ---------------- */
   .card{
@@ -175,8 +173,19 @@ const CONFIG = {
   autoReloadMinutes: 30,       // טעינת העמוד מחדש לקליטת עריכות. 0 = כבוי.
   reduceCountdownUnder: 120,   // הצג "בעוד X דק'" רק כשנשאר פחות מכך
 
-  // ── קישור ל-CSV (הדלקת נרות/שקיעה/מוצ"ש/פרשה לפי תאריך עברי) ──
-  timesSheetCsvUrl: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=1809717429&single=true&output=csv",
+  // ── קישורי CSV מגוגל שיטס (כל טאב מפורסם בנפרד → gid שונה) ──
+  // אם קישור ריק "" — נעשה שימוש בנתונים הקבועים שבהמשך (placeholders).
+  // בכל טאב: שורה ראשונה = כותרות (תתעלם), אח"כ שורות מידע.
+  //   • זמנים:      פרשה | לועזי | עברי | הדלקת נרות | ... | שקיעה | ... | ערבית/צאת שבת   (הקיים)
+  //   • שיעורים:    שם | שעה | יום
+  //   • דבר תורה:   טקסט | מקור            (שורה לכל יום — מתחלף אוטומטית מדי יום)
+  //   • הודעות:     טקסט | בתוקף עד (YYYY-MM-DD, לא חובה — מוסתר אחרי התאריך)
+  //   • מזל טוב:    טקסט | בתוקף עד (לא חובה)
+  timesSheetCsvUrl:         "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=1809717429&single=true&output=csv",
+  shiurimSheetUrl:          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=1642831187&single=true&output=csv",
+  dvarTorahSheetUrl:        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=5732209&single=true&output=csv",
+  announcementsSheetUrl:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=443688977&single=true&output=csv",
+  mazalTovSheetUrl:         "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=2061949752&single=true&output=csv",
 
   // ── תפילות חול / Weekday prayers (time "HH:MM" או טקסט חופשי כמו "לאחר מנחה") ──
   tefillot: [
@@ -276,40 +285,42 @@ const CONFIG = {
 
   <div class="stage">
     <!-- ===== Screen 1: TODAY / NOW ===== -->
-    <section class="screen grid-3" id="screen-today">
-      <div class="card card--gold next-card" id="nextPrayer"></div>
-      <div class="card">
-        <div class="card-head">
-          <span class="card-title">זמני היום</span>
-          <span class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2.5V4.8"/><path d="M12 19.2V21.5"/><path d="M2.5 12H4.8"/><path d="M19.2 12H21.5"/><path d="M5.2 5.2 6.8 6.8"/><path d="M17.2 17.2 18.8 18.8"/><path d="M18.8 5.2 17.2 6.8"/><path d="M6.8 17.2 5.2 18.8"/></g></svg></span>
+    <section class="screen" id="screen-today">
+      <div class="card-row">
+        <div class="card card--gold next-card" id="nextPrayer"></div>
+        <div class="card">
+          <div class="card-head"><span class="card-title">זמני היום</span>
+            <span class="card-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.5"/><g stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2.5V4.8"/><path d="M12 19.2V21.5"/><path d="M2.5 12H4.8"/><path d="M19.2 12H21.5"/><path d="M5.2 5.2 6.8 6.8"/><path d="M17.2 17.2 18.8 18.8"/><path d="M18.8 5.2 17.2 6.8"/><path d="M6.8 17.2 5.2 18.8"/></g></svg></span></div>
+          <div class="rows" id="todayZmanim"></div>
         </div>
-        <div class="rows" id="todayZmanim"></div>
-      </div>
-      <div class="card card--ivory" id="nextShiurCard">
-        <div class="card-head"><span class="card-title">השיעור הבא</span>
-          <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 5.5C10 4 6.2 4 4 5V19c2.2-1 6-1 8 .5 2-1.5 5.8-1.5 8-.5V5c-2.2-1-6-1-8 .5Zm0 0V19.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></div>
-        <div class="rows" id="nextShiur"></div>
+        <div class="card card--ivory" id="nextShiurCard">
+          <div class="card-head"><span class="card-title">השיעור הבא</span>
+            <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 5.5C10 4 6.2 4 4 5V19c2.2-1 6-1 8 .5 2-1.5 5.8-1.5 8-.5V5c-2.2-1-6-1-8 .5Zm0 0V19.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></div>
+          <div class="rows" id="nextShiur"></div>
+        </div>
       </div>
       <div class="ticker" id="ticker"></div>
     </section>
 
     <!-- ===== Screen 2: TEFILLOT & SHIURIM ===== -->
-    <section class="screen grid-3" id="screen-tefillot">
-      <div class="card">
-        <div class="card-head"><span class="card-title">תפילות היום</span>
-          <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 3v8m0 0c-3 0-5 2-5 5v2h10v-2c0-3-2-5-5-5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span></div>
-        <div class="rows" id="tefRows"></div>
+    <section class="screen" id="screen-tefillot">
+      <div class="card-row">
+        <div class="card" id="tefTefCard">
+          <div class="card-head"><span class="card-title">תפילות היום</span>
+            <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 3v8m0 0c-3 0-5 2-5 5v2h10v-2c0-3-2-5-5-5Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span></div>
+          <div class="rows" id="tefRows"></div>
+        </div>
+        <div class="card" id="tefShiurCard">
+          <div class="card-head"><span class="card-title">שיעורים</span>
+            <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 5.5C10 4 6.2 4 4 5V19c2.2-1 6-1 8 .5 2-1.5 5.8-1.5 8-.5V5c-2.2-1-6-1-8 .5Zm0 0V19.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></div>
+          <div class="rows" id="shiurRows"></div>
+        </div>
+        <div class="card card--ivory" id="tefDvarCard">
+          <div class="card-head"><span class="card-title">דבר תורה</span></div>
+          <div class="dvar" id="tefDvar"></div>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">שיעורים</span>
-          <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M12 5.5C10 4 6.2 4 4 5V19c2.2-1 6-1 8 .5 2-1.5 5.8-1.5 8-.5V5c-2.2-1-6-1-8 .5Zm0 0V19.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg></span></div>
-        <div class="rows" id="shiurRows"></div>
-      </div>
-      <div class="card card--ivory">
-        <div class="card-head"><span class="card-title">דבר תורה</span></div>
-        <div class="dvar" id="tefDvar"></div>
-      </div>
-      <div class="card full">
+      <div class="card" id="tefAnnounceCard">
         <div class="card-head"><span class="card-title">הודעות</span>
           <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 11l14-6v14L4 13Zm0 0v4m4-2v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span></div>
         <ul class="bullets" id="tefAnnounce"></ul>
@@ -317,34 +328,31 @@ const CONFIG = {
     </section>
 
     <!-- ===== Screen 3: SHABBAT KODESH ===== -->
-    <section class="screen grid-shabbat panel--shabbat" id="screen-shabbat">
+    <section class="screen panel--shabbat" id="screen-shabbat">
       <div class="card card--gold next-card" id="shabbatNext"></div>
-      <div class="card">
-        <div class="card-head"><span class="card-title" id="secErevTitle">ערב שבת</span></div>
-        <div class="rows" id="shErev"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">שבת בבוקר</span></div>
-        <div class="rows" id="shMorning"></div>
-      </div>
-      <div class="card">
-        <div class="card-head"><span class="card-title">שבת אחר הצהריים</span></div>
-        <div class="rows" id="shAfternoon"></div>
+      <div class="card-row">
+        <div class="card"><div class="card-head"><span class="card-title" id="secErevTitle">ערב שבת</span></div><div class="rows" id="shErev"></div></div>
+        <div class="card"><div class="card-head"><span class="card-title">שבת בבוקר</span></div><div class="rows" id="shMorning"></div></div>
+        <div class="card"><div class="card-head"><span class="card-title">שבת אחר הצהריים</span></div><div class="rows" id="shAfternoon"></div></div>
       </div>
     </section>
 
     <!-- ===== Screen 4: COMMUNITY / TORAH ===== -->
-    <section class="screen grid-comm" id="screen-community">
-      <div class="card">
-        <div class="card-head"><span class="card-title">הודעות</span>
-          <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 11l14-6v14L4 13Zm0 0v4m4-2v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span></div>
-        <ul class="bullets" id="commAnnounce"></ul>
-        <div class="card-head" style="margin-top:auto"><span class="card-title">מזל טוב</span></div>
-        <ul class="bullets" id="commMazal"></ul>
-      </div>
-      <div class="card card--ivory">
-        <div class="card-head"><span class="card-title">דבר תורה</span></div>
-        <div class="dvar" id="commDvar"></div>
+    <section class="screen" id="screen-community">
+      <div class="card-row">
+        <div class="card" id="commAnnCard">
+          <div class="card-head"><span class="card-title">הודעות</span>
+            <span class="card-icon"><svg viewBox="0 0 24 24"><path d="M4 11l14-6v14L4 13Zm0 0v4m4-2v5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span></div>
+          <ul class="bullets" id="commAnnounce"></ul>
+        </div>
+        <div class="card" id="commMazalCard">
+          <div class="card-head"><span class="card-title">מזל טוב</span></div>
+          <ul class="bullets" id="commMazal"></ul>
+        </div>
+        <div class="card card--ivory" id="commDvarCard">
+          <div class="card-head"><span class="card-title">דבר תורה</span></div>
+          <div class="dvar" id="commDvar"></div>
+        </div>
       </div>
     </section>
   </div>
@@ -355,6 +363,7 @@ const CONFIG = {
 (function(){
   const KZ = window.KosherZmanim;
   const $ = id => document.getElementById(id);
+  const setHidden = (id,cond)=>{ const e=$(id); if(e) e.hidden=!!cond; };
 
   $("shulName").textContent = CONFIG.shulName;
   $("shulSub").textContent  = CONFIG.shulSub;
@@ -391,15 +400,52 @@ const CONFIG = {
       else { if(c=='"')q=true; else if(c==','){f.push(cur);cur="";}
         else if(c=='\n'||c=='\r'){ if(c=='\r'&&txt[i+1]=='\n')i++; f.push(cur); rows.push(f); f=[]; cur=""; } else cur+=c; } }
     if(cur.length||f.length){ f.push(cur); rows.push(f); } return rows; }
-  async function loadSheet(){
-    const url=CONFIG.timesSheetCsvUrl; if(!url){ SHEET=null; return; }
+  const DATA={ shiurim:null, dvar:null, announce:null, mazal:null };  // null = use CONFIG fallback
+  async function fetchRows(url){
+    if(!url) return null;
     try{ const bust=(url.indexOf("?")>=0?"&":"?")+"_="+Date.now();
-      const rows=parseCSV(await (await fetch(url+bust,{cache:"no-store"})).text()); const m=new Map();
-      rows.slice(1).forEach(r=>{ const k=hebNorm(r[2]); if(!k) return;
+      return parseCSV(await (await fetch(url+bust,{cache:"no-store"})).text()); }
+    catch(e){ return null; }
+  }
+  function notExpired(until){ until=(until||"").trim(); if(!until) return true;
+    const t=Date.parse(until); if(isNaN(t)) return true;
+    const today=new Date(); today.setHours(0,0,0,0); return t>=today.getTime(); }
+
+  async function loadAll(){
+    const [t,sh,dv,an,mz]=await Promise.all([
+      fetchRows(CONFIG.timesSheetCsvUrl), fetchRows(CONFIG.shiurimSheetUrl),
+      fetchRows(CONFIG.dvarTorahSheetUrl), fetchRows(CONFIG.announcementsSheetUrl),
+      fetchRows(CONFIG.mazalTovSheetUrl),
+    ]);
+    // times
+    if(t){ const m=new Map();
+      t.slice(1).forEach(r=>{ const k=hebNorm(r[2]); if(!k) return;
         m.set(k,{ name:(r[0]||"").trim(), candle:(r[3]||"").trim(), shkia:(r[5]||"").trim(), motzaei:(r[9]||"").trim() }); });
       SHEET=m.size?m:null;
-    }catch(e){ SHEET=null; }
+    } else SHEET=null;
+    // shiurim: name | time | day
+    DATA.shiurim = sh ? sh.slice(1).map(r=>({name:(r[0]||"").trim(),time:(r[1]||"").trim(),day:(r[2]||"").trim()})).filter(x=>x.name) : null;
+    // dvar torah: text | source
+    DATA.dvar = dv ? dv.slice(1).map(r=>({text:(r[0]||"").trim(),source:(r[1]||"").trim()})).filter(x=>x.text) : null;
+    // announcements: text | until
+    DATA.announce = an ? an.slice(1).map(r=>({text:(r[0]||"").trim(),until:(r[1]||"").trim()})).filter(x=>x.text&&notExpired(x.until)).map(x=>x.text) : null;
+    // mazal tov: text | until
+    DATA.mazal = mz ? mz.slice(1).map(r=>({text:(r[0]||"").trim(),until:(r[1]||"").trim()})).filter(x=>x.text&&notExpired(x.until)).map(x=>x.text) : null;
   }
+
+  // content getters — live sheet data when present, else CONFIG placeholders
+  const getShiurim = () => DATA.shiurim || CONFIG.shiurim || [];
+  const getAnnouncements = () => DATA.announce || CONFIG.announcements || [];
+  const getMazal = () => DATA.mazal || CONFIG.mazalTov || [];
+  function getDvar(now){
+    if(DATA.dvar && DATA.dvar.length){
+      const start=new Date(now.getFullYear(),0,0);
+      const doy=Math.floor((now-start)/86400000);       // day-of-year → rotates daily
+      return DATA.dvar[doy % DATA.dvar.length];
+    }
+    return CONFIG.dvarTorah || null;
+  }
+  function dvarHtml(dv){ return dv?`${dv.text||""}${dv.source?`<span class="src">${dv.source}</span>`:""}`:""; }
   function nextDow(base,dow){ const d=new Date(base.getFullYear(),base.getMonth(),base.getDate());
     d.setDate(d.getDate()+((dow-d.getDay()+7)%7)); return d; }
   function nextEventRow(now){ if(!SHEET) return null;
@@ -514,18 +560,26 @@ const CONFIG = {
       : `<div class="ne-label">התפילה הקרובה</div><div class="ne-name">—</div>`;
     renderRows($("todayZmanim"),dailyZmanim(now));
     // next shiur
-    const ns=nextUpcoming(now,(CONFIG.shiurim||[]).filter(s=>/^\d{1,2}:\d{2}$/.test(s.time||"")));
-    const shiur=ns||(CONFIG.shiurim||[])[0];
+    const shiurList=getShiurim();
+    const ns=nextUpcoming(now,shiurList.filter(s=>/^\d{1,2}:\d{2}$/.test(s.time||"")));
+    const shiur=ns||shiurList[0];
     renderRows($("nextShiur"), shiur?[{name:shiur.name,val:shiur.time|| (shiur.day||""),big:true}].concat(shiur.day&&shiur.time?[{name:shiur.day,val:""}]:[]):[]);
     // ticker
     const tm=CONFIG.tickerMessages||[]; $("ticker").innerHTML=tm.length?tm[Math.floor(Date.now()/15000)%tm.length]:"";
+    // hide empty
+    setHidden("nextShiurCard", shiurList.length===0);
+    setHidden("ticker", tm.length===0);
   }
 
   function renderTefillot(now){
     renderRows($("tefRows"),(CONFIG.tefillot||[]).map(t=>({name:t.name,val:t.time,big:true})));
-    renderRows($("shiurRows"),(CONFIG.shiurim||[]).map(s=>({name:s.name,hint:s.day,val:s.time})));
-    $("tefDvar").innerHTML=CONFIG.dvarTorah?`${CONFIG.dvarTorah.text||""}${CONFIG.dvarTorah.source?`<span class="src">${CONFIG.dvarTorah.source}</span>`:""}`:"";
-    const a=$("tefAnnounce"); a.innerHTML=""; (CONFIG.announcements||[]).forEach(x=>{const li=document.createElement("li");li.textContent=x;a.appendChild(li);});
+    renderRows($("shiurRows"),getShiurim().map(s=>({name:s.name,hint:s.day,val:s.time})));
+    const dv=getDvar(now);
+    $("tefDvar").innerHTML=dvarHtml(dv);
+    const a=$("tefAnnounce"); a.innerHTML=""; getAnnouncements().forEach(x=>{const li=document.createElement("li");li.textContent=x;a.appendChild(li);});
+    setHidden("tefShiurCard", getShiurim().length===0);
+    setHidden("tefDvarCard", !(dv&&dv.text));
+    setHidden("tefAnnounceCard", getAnnouncements().length===0);
   }
 
   function renderShabbatScreen(now){
@@ -551,9 +605,12 @@ const CONFIG = {
 
   function renderCommunity(now){
     const fill=(id,arr)=>{ const el=$(id); el.innerHTML=""; (arr||[]).forEach(x=>{const li=document.createElement("li");li.textContent=x;el.appendChild(li);}); };
-    fill("commAnnounce",CONFIG.announcements);
-    fill("commMazal",CONFIG.mazalTov);
-    $("commDvar").innerHTML=CONFIG.dvarTorah?`${CONFIG.dvarTorah.text||""}${CONFIG.dvarTorah.source?`<span class="src">${CONFIG.dvarTorah.source}</span>`:""}`:"";
+    fill("commAnnounce",getAnnouncements());
+    fill("commMazal",getMazal());
+    const dv=getDvar(now); $("commDvar").innerHTML=dvarHtml(dv);
+    setHidden("commAnnCard", getAnnouncements().length===0);
+    setHidden("commMazalCard", getMazal().length===0);
+    setHidden("commDvarCard", !(dv&&dv.text));
   }
 
   const RENDER={ today:renderToday, tefillot:renderTefillot, shabbat:renderShabbatScreen, community:renderCommunity };
@@ -574,12 +631,17 @@ const CONFIG = {
     if(d===5 && h>=(Number(CONFIG.fridayFromHour)||12)) return "friday";
     return "weekday";
   }
+  function screenHasContent(name){
+    if(name==="community"){ const dv=getDvar(new Date()); return !!(getAnnouncements().length||getMazal().length||(dv&&dv.text)); }
+    return true;   // today / tefillot / shabbat always have core data
+  }
   let rotTimer=null, rotIdx=0, curMode=null;
   function rotate(){
     const now=new Date(); const mode=dayType(now);
     const seq=(CONFIG.screenRotationConfig&&CONFIG.screenRotationConfig[mode])||CONFIG.screenRotationConfig.weekday||[{screen:"today",sec:20}];
     if(mode!==curMode){ curMode=mode; rotIdx=0; }
-    const item=seq[rotIdx%seq.length]; rotIdx++;
+    let item, tries=0;
+    do{ item=seq[rotIdx%seq.length]; rotIdx++; tries++; } while(!screenHasContent(item.screen)&&tries<seq.length);
     showScreen(item.screen);
     clearTimeout(rotTimer); rotTimer=setTimeout(rotate,(item.sec||20)*1000);
   }
@@ -593,14 +655,14 @@ const CONFIG = {
     requestAnimationFrame(fitActive);
   }
 
-  async function fullRefresh(){ await loadSheet(); renderHeader(new Date()); if(curMode) rotate(); }
+  async function fullRefresh(){ await loadAll(); renderHeader(new Date()); if(curMode) rotate(); }
 
   function scheduleMidnight(){ const n=new Date(); const next=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1,0,0,30);
-    setTimeout(()=>{ loadSheet().then(()=>{ curMode=null; }); scheduleMidnight(); }, next-n); }
+    setTimeout(()=>{ loadAll().then(()=>{ curMode=null; }); scheduleMidnight(); }, next-n); }
 
   if(!KZ){ $("todayZmanim").innerHTML='<div class="row"><span class="name">שגיאה בטעינת ספריית הזמנים</span></div>'; return; }
 
-  loadSheet().then(()=>{
+  loadAll().then(()=>{
     renderHeader(new Date());
     rotate();
     if(document.fonts&&document.fonts.ready) document.fonts.ready.then(fitActive);
