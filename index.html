@@ -138,7 +138,7 @@
   .bullets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:clamp(4px,.9vh,12px);}
   .bullets li{font-size:clamp(1rem,1.5vw,1.6rem);line-height:1.35;padding-inline-start:1em;position:relative;}
   .bullets li::before{content:"•";color:var(--gold);position:absolute;inset-inline-start:0;}
-  .dvar{font-family:var(--serif);font-size:clamp(1.1rem,1.9vw,2rem);line-height:1.55;text-align:start;}
+  .dvar{--ds:1;flex:1;min-height:0;overflow:hidden;font-family:var(--serif);font-size:calc(clamp(1.05rem,1.85vw,2rem)*var(--ds));line-height:1.5;text-align:start;}
   .dvar b{color:#9a6b18;font-weight:800;}
   .dvar .src{display:block;color:var(--muted);font-size:.6em;margin-top:.7em;text-align:center;}
 
@@ -178,10 +178,11 @@ const CONFIG = {
   // אם קישור ריק "" — נעשה שימוש בנתונים הקבועים שבהמשך (placeholders).
   // בכל טאב: שורה ראשונה = כותרות (תתעלם), אח"כ שורות מידע.
   //   • זמנים:      פרשה | לועזי | עברי | הדלקת נרות | ... | שקיעה | ... | ערבית/צאת שבת   (הקיים)
-  //   • שיעורים:    שם | שעה | יום
-  //   • דבר תורה:   טקסט | מקור            (שורה לכל יום — מתחלף אוטומטית מדי יום)
-  //   • הודעות:     טקסט | בתוקף עד (YYYY-MM-DD, לא חובה — מוסתר אחרי התאריך)
-  //   • מזל טוב:    טקסט | בתוקף עד (לא חובה)
+  //   • שיעורים:    שם | שעה | יום           (יום: אות א-ו/ז או טקסט חופשי; שם עד ~28 תווים)
+  //   • דבר תורה:   טקסט | מקור             (שורה לכל יום — מתחלף אוטומטית; טקסט עד ~380 תווים)
+  //   • הודעות:     טקסט | בתוקף עד (YYYY-MM-DD, לא חובה — מוסתר אחרי התאריך; עד ~70 תווים, עד ~6 שורות)
+  //   • מזל טוב:    טקסט | בתוקף עד (לא חובה; עד ~70 תווים)
+  //   הערה: טקסט ארוך מהמומלץ יוקטן אוטומטית כדי להיכנס (לא ייחתך), אך ייראה קטן יותר.
   timesSheetCsvUrl:         "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=1809717429&single=true&output=csv",
   shiurimSheetUrl:          "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=1642831187&single=true&output=csv",
   dvarTorahSheetUrl:        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQFNYAMkQbz0U57lsLPQFwW6gw63A1zODvyGUH2ADjQJF4duh-Q7RjweaXjlMLqCnEopHcLoq2URCAE/pub?gid=5732209&single=true&output=csv",
@@ -448,10 +449,10 @@ const CONFIG = {
   }
   function dvarHtml(dv){
     if(!dv||!dv.text) return "";
-    let t=String(dv.text);
+    let t=String(dv.text).trim().replace(/[ \t]{2,}/g," ");  // drop stray extra spaces
     t=t.replace(/\r\n|\r|\n/g,"<br>");                       // honor sheet line breaks
     t=t.replace(/(^|<br>)\s*(השאלה:)/,'$1<b>$2</b> ');       // bold "השאלה:"
-    t=t.replace(/\s*(התשובה:)/,'<br><br><b>$1</b> ');        // answer on its own line, bold
+    t=t.replace(/\s*(התשובה:)/,'<br><b>$1</b> ');            // answer on next line, bold
     return `<div class="dvar-text">${t}</div>${dv.source?`<span class="src">${dv.source}</span>`:""}`;
   }
   const DAYNAMES={'א':'ראשון','ב':'שני','ג':'שלישי','ד':'רביעי','ה':'חמישי','ו':'שישי','ז':'שבת','ש':'שבת'};
@@ -489,10 +490,11 @@ const CONFIG = {
       row.className="row"+(it.big?" row--big":"")+(it.past?" past":"");
       row.innerHTML=`<span class="name">${it.name}${it.hint?`<span class="hint">${it.hint}</span>`:""}</span><span class="val">${it.val||""}</span>`;
       el.appendChild(row); }); }
-  function fitList(el){ if(!el) return; el.style.setProperty("--rs","1"); if(el.clientHeight===0) return;
-    let rs=1,g=0; while(el.scrollHeight>el.clientHeight+1&&rs>0.45&&g<25){ rs-=0.05; el.style.setProperty("--rs",rs.toFixed(2)); g++; } }
+  function fitScale(el,v){ if(!el) return; el.style.setProperty(v,"1"); if(el.clientHeight===0) return;
+    let rs=1,g=0; while(el.scrollHeight>el.clientHeight+1&&rs>0.4&&g<28){ rs-=0.05; el.style.setProperty(v,rs.toFixed(2)); g++; } }
   function fitActive(){ const s=document.querySelector(".screen.active"); if(!s) return;
-    s.querySelectorAll(".rows").forEach(fitList); }
+    s.querySelectorAll(".rows").forEach(el=>fitScale(el,"--rs"));
+    s.querySelectorAll(".dvar").forEach(el=>fitScale(el,"--ds")); }
 
   /* ---------- header (shared) ---------- */
   function renderHeader(now){
